@@ -3,9 +3,8 @@ export default function Home() {
     <>
       
       <div>
-        <h1>hello world</h1>
+        <h1>hello world1</h1>
       </div>
-      
     </>
   );
 }
