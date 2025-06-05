@@ -1,5 +1,14 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
 
 body {
-  font-family: sans-serif, Arial, Helvetica;
+  @apply font-sans;
 }
+
+.navText{
+  @apply hover:scale-115 transition-all duration-350 ease-in-out hover:text-blue-400;
+}
+
+

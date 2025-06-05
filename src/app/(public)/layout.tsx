@@ -1,7 +1,8 @@
-import type { Metadata } from "next";
 import "../globals.css";
-import Header from "../components/Header";
+import type { Metadata } from "next";
 import Footer from "../components/Footer";
+
+
 
 export const metadata: Metadata = {
   title: "Barbearia Lopes Club",
@@ -18,10 +19,7 @@ export default function RootLayout({
       <head>
         {/* metas, favicon, título, etc */}
       </head>
-      <body
-        className={`antialiased`}
-      >
-        <Header />
+      <body className="antialiased font-sans">
         {children}
         <Footer />
       </body>
