@@ -1,8 +1,64 @@
+"use client";
 import Link from "next/link";
+import { useState, useEffect } from "react";
+import AgendamentoModal from "./components/AgendamentoModal";
+import LoginModal from "./components/LoginModal";
+import CadastroModal from "./components/CadastroModal";
 
 export default function Home() {
+  const [isAgendamentoModalOpen, setIsAgendamentoModalOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isCadastroModalOpen, setIsCadastroModalOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    // Verificar se o usuário está logado
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      setUser(JSON.parse(userData));
+    }
+
+    // Listener para abrir modal de login
+    const handleOpenLoginModal = () => {
+      setIsLoginModalOpen(true);
+    };
+
+    window.addEventListener('openLoginModal', handleOpenLoginModal);
+    return () => window.removeEventListener('openLoginModal', handleOpenLoginModal);
+  }, []);
+
+  const openAgendamentoModal = () => setIsAgendamentoModalOpen(true);
+  const closeAgendamentoModal = () => setIsAgendamentoModalOpen(false);
+  
+  const openLoginModal = () => setIsLoginModalOpen(true);
+  const closeLoginModal = () => setIsLoginModalOpen(false);
+  
+  const openCadastroModal = () => setIsCadastroModalOpen(true);
+  const closeCadastroModal = () => setIsCadastroModalOpen(false);
+
+  const switchToCadastro = () => {
+    setIsLoginModalOpen(false);
+    setIsCadastroModalOpen(true);
+  };
+
+  const switchToLogin = () => {
+    setIsCadastroModalOpen(false);
+    setIsLoginModalOpen(true);
+  };
+
+  const handleLoginSuccess = (userData: any) => {
+    setUser(userData);
+    // Forçar re-render do header
+    window.dispatchEvent(new CustomEvent('userLoggedIn'));
+  };
+
+  const handleLoginRequired = () => {
+    setIsLoginModalOpen(true);
+  };
+
   return (
-    <main className="bg-white text-gray-900">      {/* Hero Section */}
+    <>
+      <main className="bg-white text-gray-900">{/* Hero Section */}
       <section id="inicio" className="relative min-h-screen flex items-center justify-center">
         <div className="absolute inset-0">
           <img
@@ -148,8 +204,10 @@ export default function Home() {
                     <p className="text-gray-600">(11) 99999-9999</p>
                   </div>
                 </div>
-              </div>
-              <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 transition-all duration-300 transform hover:scale-105 uppercase tracking-wider">
+              </div>              <button 
+                onClick={openAgendamentoModal}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 transition-all duration-300 transform hover:scale-105 uppercase tracking-wider"
+              >
                 AGENDAR PELO WHATSAPP
               </button>
             </div>            <div className="grid grid-cols-1 gap-4">
@@ -264,13 +322,12 @@ export default function Home() {
             <div className="bg-black p-16 text-center border-r border-gray-700">
               <h3 className="text-3xl font-bold mb-8 text-white uppercase tracking-wider">
                 AGENDE ONLINE
-              </h3>
-              <a
-                href="#"
+              </h3>              <button
+                onClick={openAgendamentoModal}
                 className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-12 uppercase tracking-wider transition-all duration-300 transform hover:scale-105"
               >
                 AGENDAR AGORA
-              </a>
+              </button>
             </div>
             
             {/* Agende WhatsApp */}
@@ -287,9 +344,27 @@ export default function Home() {
                 📱 WHATSAPP
               </a>
             </div>
-          </div>
-        </div>
+          </div>        </div>
       </section>
     </main>
+
+    {/* Modais */}
+    <AgendamentoModal 
+      isOpen={isAgendamentoModalOpen} 
+      onClose={closeAgendamentoModal}
+      onLoginRequired={handleLoginRequired}
+    />
+    <LoginModal 
+      isOpen={isLoginModalOpen} 
+      onClose={closeLoginModal}
+      onSwitchToCadastro={switchToCadastro}
+      onLoginSuccess={handleLoginSuccess}
+    />
+    <CadastroModal 
+      isOpen={isCadastroModalOpen} 
+      onClose={closeCadastroModal}
+      onSwitchToLogin={switchToLogin}
+    />
+  </>
   );
 }

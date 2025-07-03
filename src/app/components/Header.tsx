@@ -18,7 +18,10 @@ export default function Header() {
       isScrolled 
         ? 'bg-black/90 backdrop-blur-sm'  // Se scrolled: fundo preto transparente
         : 'bg-transparent'
-    }`}>      <nav className="max-w-6xl mx-auto px-6 py-2">
+    }`}>
+      <nav className={`max-w-6xl mx-auto px-6 transition-all duration-400 ${
+        isScrolled ? 'py-1' : 'py-4'  // Altura menor: py-1 quando scrolled, py-4 normal
+      }`}>
         {/* Menu horizontal com logo centralizado */}
         <div className="flex items-center justify-center">
           <div className="hidden lg:flex items-center gap-16 text-white">
@@ -34,7 +37,9 @@ export default function Header() {
               <img
                 src="/assets/lopesclubicon.png"
                 alt="Lopes Club"
-                className="w-25 h-25 object-contain"
+                className={`object-contain transition-all duration-400 ${
+                  isScrolled ? 'w-16 h-16' : 'w-25 h-25'  // Logo menor quando scrolled
+                }`}
               />
             </div>
             
