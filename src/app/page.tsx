@@ -1,15 +1,22 @@
 "use client";
-import Link from "next/link";
 import { useState, useEffect } from "react";
 import AgendamentoModal from "./components/AgendamentoModal";
 import LoginModal from "./components/LoginModal";
 import CadastroModal from "./components/CadastroModal";
 
+// Interface para tipagem de usuário
+interface User {
+  id: string;
+  nome: string;
+  email: string;
+  telefone: string;
+}
+
 export default function Home() {
   const [isAgendamentoModalOpen, setIsAgendamentoModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isCadastroModalOpen, setIsCadastroModalOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     // Verificar se o usuário está logado
@@ -45,8 +52,7 @@ export default function Home() {
     setIsCadastroModalOpen(false);
     setIsLoginModalOpen(true);
   };
-
-  const handleLoginSuccess = (userData: any) => {
+  const handleLoginSuccess = (userData: User) => {
     setUser(userData);
     // Forçar re-render do header
     window.dispatchEvent(new CustomEvent('userLoggedIn'));

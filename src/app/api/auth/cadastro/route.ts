@@ -1,9 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+
+// Interface para tipagem de usuário
+interface User {
+  id: string;
+  nome: string;
+  email: string;
+  telefone: string;
+  senha: string;
+  createdAt: string;
+}
 
 // Simulação de banco de dados - substitua pela sua implementação
-const users: any[] = [];
+const users: User[] = [];
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,10 +43,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Criptografar a senha
-    const hashedPassword = await bcrypt.hash(senha, 10);
-
-    // Criar usuário
-    const newUser = {
+    const hashedPassword = await bcrypt.hash(senha, 10);    // Criar usuário
+    const newUser: User = {
       id: Date.now().toString(),
       nome,
       email,
@@ -46,10 +53,9 @@ export async function POST(request: NextRequest) {
       createdAt: new Date().toISOString()
     };
 
-    users.push(newUser);
-
-    // Retornar sucesso (sem a senha)
-    const { senha: _, ...userWithoutPassword } = newUser;
+    users.push(newUser);    // Retornar sucesso (sem a senha)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { senha: _senha, ...userWithoutPassword } = newUser;
     
     return NextResponse.json(
       { 

@@ -1,8 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as jwt from 'jsonwebtoken';
 
+// Interface para tipagem de agendamento
+interface Agendamento {
+  id: string;
+  usuarioId: string;
+  servico: string;
+  data: string;
+  horario: string;
+  status: string;
+  createdAt: string;
+}
+
+// Interface para payload do JWT
+interface JwtPayload {
+  userId: string;
+  email: string;
+}
+
 // Simulação de banco de dados - substitua pela sua implementação
-const agendamentos: any[] = [];
+const agendamentos: Agendamento[] = [];
 
 const JWT_SECRET = process.env.JWT_SECRET || 'sua-chave-secreta-aqui';
 
@@ -15,24 +32,20 @@ export async function POST(request: NextRequest) {
         { message: 'Token de acesso requerido' },
         { status: 401 }
       );
-    }
-
-    const token = authHeader.substring(7);
-    let decoded;
+    }    const token = authHeader.substring(7);
+    let decoded: JwtPayload;
     
     try {
-      decoded = jwt.verify(token, JWT_SECRET) as any;
-    } catch (error) {
+      decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
+    } catch {
       return NextResponse.json(
         { message: 'Token inválido' },
         { status: 401 }
       );
-    }
-
-    const { usuarioId, servico, data, horario } = await request.json();
+    }    const { servico, data, horario } = await request.json();
 
     // Validações
-    if (!usuarioId || !servico || !data || !horario) {
+    if (!servico || !data || !horario) {
       return NextResponse.json(
         { message: 'Todos os campos são obrigatórios' },
         { status: 400 }
@@ -51,10 +64,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Criar agendamento
-    const newAgendamento = {
+    // Criar agendamento usando o ID do usuário autenticado
+    const newAgendamento: Agendamento = {
       id: Date.now().toString(),
-      usuarioId,
+      usuarioId: decoded.userId,
       servico,
       data,
       horario,
@@ -90,14 +103,12 @@ export async function GET(request: NextRequest) {
         { message: 'Token de acesso requerido' },
         { status: 401 }
       );
-    }
-
-    const token = authHeader.substring(7);
-    let decoded;
+    }    const token = authHeader.substring(7);
+    let decoded: JwtPayload;
     
     try {
-      decoded = jwt.verify(token, JWT_SECRET) as any;
-    } catch (error) {
+      decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
+    } catch {
       return NextResponse.json(
         { message: 'Token inválido' },
         { status: 401 }

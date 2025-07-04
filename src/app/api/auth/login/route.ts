@@ -2,9 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
+// Interface para tipagem de usuário
+interface User {
+  id: string;
+  nome: string;
+  email: string;
+  telefone: string;
+  senha: string;
+  createdAt: string;
+}
+
 // Simulação de banco de dados - substitua pela sua implementação
 // Esta deveria ser a mesma referência do arquivo de cadastro
-const users: any[] = [];
+const users: User[] = [];
 
 const JWT_SECRET = process.env.JWT_SECRET || 'sua-chave-secreta-aqui';
 
@@ -46,10 +56,9 @@ export async function POST(request: NextRequest) {
       },
       JWT_SECRET,
       { expiresIn: '7d' }
-    );
-
-    // Retornar sucesso (sem a senha)
-    const { senha: _, ...userWithoutPassword } = user;
+    );    // Retornar sucesso (sem a senha)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { senha: _senha, ...userWithoutPassword } = user;
     
     return NextResponse.json(
       { 
