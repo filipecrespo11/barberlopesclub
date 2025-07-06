@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import AgendamentoModal from "./components/AgendamentoModal";
 import LoginModal from "./components/LoginModal";
 import CadastroModal from "./components/CadastroModal";
@@ -16,13 +17,13 @@ export default function Home() {
   const [isAgendamentoModalOpen, setIsAgendamentoModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isCadastroModalOpen, setIsCadastroModalOpen] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     // Verificar se o usuário está logado
     const userData = localStorage.getItem('user');
     if (userData) {
-      setUser(JSON.parse(userData));
+      // Usuário está logado, mas não precisamos armazenar no estado aqui
+      console.log('Usuário logado:', JSON.parse(userData));
     }
 
     // Listener para abrir modal de login
@@ -37,10 +38,8 @@ export default function Home() {
   const openAgendamentoModal = () => setIsAgendamentoModalOpen(true);
   const closeAgendamentoModal = () => setIsAgendamentoModalOpen(false);
   
-  const openLoginModal = () => setIsLoginModalOpen(true);
   const closeLoginModal = () => setIsLoginModalOpen(false);
   
-  const openCadastroModal = () => setIsCadastroModalOpen(true);
   const closeCadastroModal = () => setIsCadastroModalOpen(false);
 
   const switchToCadastro = () => {
@@ -53,9 +52,9 @@ export default function Home() {
     setIsLoginModalOpen(true);
   };
   const handleLoginSuccess = (userData: User) => {
-    setUser(userData);
+    // Salvar usuário no localStorage (já feito no modal)
     // Forçar re-render do header
-    window.dispatchEvent(new CustomEvent('userLoggedIn'));
+    window.dispatchEvent(new CustomEvent('userLoggedIn', { detail: userData }));
   };
 
   const handleLoginRequired = () => {
@@ -67,10 +66,12 @@ export default function Home() {
       <main className="bg-white text-gray-900">{/* Hero Section */}
       <section id="inicio" className="relative min-h-screen flex items-center justify-center">
         <div className="absolute inset-0">
-          <img
+          <Image
             src="/assets/backgroundhero.jpg"
             alt="Barbearia"
             className="w-full h-full object-cover"
+            fill
+            priority
           />
           <div className="absolute inset-0 bg-black/60" />
         </div>
@@ -175,7 +176,13 @@ export default function Home() {
         
         {/* Logo marca d'água */}
         <div className="absolute right-8 top-1/2 transform -translate-y-1/2 opacity-10">
-          <img src="/assets/lopesclubicon.png" alt="Logo" className="w-64 h-64 object-contain" />
+          <Image 
+            src="/assets/lopesclubicon.png" 
+            alt="Logo" 
+            className="w-64 h-64 object-contain" 
+            width={256} 
+            height={256}
+          />
         </div>
       </section>
 
@@ -217,15 +224,19 @@ export default function Home() {
                 AGENDAR PELO WHATSAPP
               </button>
             </div>            <div className="grid grid-cols-1 gap-4">
-              <img
+              <Image
                 src="/assets/foto-unidade-1.svg"
                 alt="Interior da Unidade"
                 className="w-full h-48 object-cover shadow-lg"
+                width={400}
+                height={192}
               />
-              <img
+              <Image
                 src="/assets/foto-unidade-2.svg"
                 alt="Ambiente da Barbearia"
                 className="w-full h-48 object-cover shadow-lg"
+                width={400}
+                height={192}
               />
             </div>
           </div>
@@ -239,80 +250,96 @@ export default function Home() {
             <p className="text-xl text-gray-600">Alguns dos nossos trabalhos recentes</p>
           </div>          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             <div className="group relative overflow-hidden shadow-lg">
-              <img
+              <Image
                 src="/assets/corte1.svg"
                 alt="Corte Moderno"
                 className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-110"
+                width={400}
+                height={256}
               />
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                 <span className="text-white font-semibold">Corte Moderno</span>
               </div>
             </div>
             <div className="group relative overflow-hidden shadow-lg">
-              <img
+              <Image
                 src="/assets/corte2.svg"
                 alt="Barba Estilizada"
                 className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-110"
+                width={400}
+                height={256}
               />
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                 <span className="text-white font-semibold">Barba Estilizada</span>
               </div>
             </div>
             <div className="group relative overflow-hidden shadow-lg">
-              <img
+              <Image
                 src="/assets/corte3.svg"
                 alt="Combo Completo"
                 className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-110"
+                width={400}
+                height={256}
               />
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                 <span className="text-white font-semibold">Combo Completo</span>
               </div>
             </div>
             <div className="group relative overflow-hidden shadow-lg">
-              <img
+              <Image
                 src="/assets/corte4.svg"
                 alt="Estilo Clássico"
                 className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-110"
+                width={400}
+                height={256}
               />
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                 <span className="text-white font-semibold">Estilo Clássico</span>
               </div>
             </div>
             <div className="group relative overflow-hidden shadow-lg">
-              <img
+              <Image
                 src="/assets/corte1.svg"
                 alt="Degradê Moderno"
                 className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-110"
+                width={400}
+                height={256}
               />
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                 <span className="text-white font-semibold">Degradê Moderno</span>
               </div>
             </div>
             <div className="group relative overflow-hidden shadow-lg">
-              <img
+              <Image
                 src="/assets/corte2.svg"
                 alt="Corte Social"
                 className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-110"
+                width={400}
+                height={256}
               />
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                 <span className="text-white font-semibold">Corte Social</span>
               </div>
             </div>
             <div className="group relative overflow-hidden shadow-lg">
-              <img
+              <Image
                 src="/assets/corte3.svg"
                 alt="Estilo Executivo"
                 className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-110"
+                width={400}
+                height={256}
               />
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                 <span className="text-white font-semibold">Estilo Executivo</span>
               </div>
             </div>
             <div className="group relative overflow-hidden shadow-lg">
-              <img
+              <Image
                 src="/assets/corte4.svg"
                 alt="Barba Completa"
                 className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-110"
+                width={400}
+                height={256}
               />
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                 <span className="text-white font-semibold">Barba Completa</span>

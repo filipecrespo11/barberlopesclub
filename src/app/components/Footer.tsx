@@ -1,3 +1,6 @@
+import React from 'react';
+import Image from 'next/image';
+
 export default function Footer() {
   return (
     <footer className="bg-gradient-to-r from-gray-900 to-black text-white">
@@ -6,9 +9,11 @@ export default function Footer() {
           {/* Logo e Descrição */}
           <div className="md:col-span-2">
             <div className="flex items-center gap-3 mb-6">
-              <img
+              <Image
                 src="/assets/lopesclubicon.png"
                 alt="Lopes Club"
+                width={48}
+                height={48}
                 className="w-12 h-12"
               />
               <div>

@@ -1,5 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
+import { apiRequest, API_CONFIG } from "@/app/utils/api";
+import { User } from "@/app/types";
 
 interface AgendamentoModalProps {
   isOpen: boolean;
@@ -15,20 +17,22 @@ export default function AgendamentoModal({ isOpen, onClose, onLoginRequired }: A
     data: '',
     horario: ''
   });
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Verificar se o usuário está logado
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      const parsedUser = JSON.parse(userData);
-      setUser(parsedUser);
-      setFormData(prev => ({
-        ...prev,
-        nome: parsedUser.nome,
-        telefone: parsedUser.telefone
-      }));
+    if (isOpen) {
+      // Verificar se o usuário está logado
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        const parsedUser = JSON.parse(userData);
+        setUser(parsedUser);
+        setFormData(prev => ({
+          ...prev,
+          nome: parsedUser.nome || '',
+          telefone: parsedUser.telefone || ''
+        }));
+      }
     }
   }, [isOpen]);
 
@@ -63,58 +67,70 @@ export default function AgendamentoModal({ isOpen, onClose, onLoginRequired }: A
       return;
     }
 
+    // Validação dos campos
+    if (!formData.servico || !formData.data || !formData.horario) {
+      alert('Por favor, preencha todos os campos obrigatórios.');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      // Salvar agendamento no banco de dados
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/agendamentos', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          usuarioId: user.id,
+      // Tentar salvar no backend primeiro
+      try {
+        const agendamentoData = {
+          nome: formData.nome,
+          telefone: formData.telefone,
           servico: formData.servico,
           data: formData.data,
-          horario: formData.horario
-        }),
-      });
+          horario: formData.horario,
+          usuario_id: user.id
+        };
 
-      if (response.ok) {
-        // Criar mensagem para WhatsApp
-        const servicoSelecionado = servicos.find(s => s.id === formData.servico);
-        const mensagem = `Olá! Gostaria de confirmar meu agendamento:
+        console.log('Tentando salvar agendamento:', agendamentoData);
+        
+        const response = await apiRequest(API_CONFIG.endpoints.agendamentos.criar, {
+          method: 'POST',
+          body: JSON.stringify(agendamentoData)
+        });
+
+        console.log('Agendamento salvo com sucesso:', response);
+      } catch (apiError) {
+        console.error('Erro ao salvar no backend:', apiError);
+        // Continuar mesmo com erro da API para não bloquear o WhatsApp
+      }
+      
+      // Criar mensagem para WhatsApp
+      const servicoSelecionado = servicos.find(s => s.id === formData.servico);
+      const dataFormatada = new Date(formData.data).toLocaleDateString('pt-BR');
+      
+      const mensagem = `Olá! Gostaria de confirmar meu agendamento:
         
 👤 Nome: ${formData.nome}
 📞 Telefone: ${formData.telefone}
 ✂️ Serviço: ${servicoSelecionado?.nome} (${servicoSelecionado?.preco})
-📅 Data: ${formData.data}
+📅 Data: ${dataFormatada}
 🕐 Horário: ${formData.horario}
 
-Agendamento registrado no sistema!`;
+Agendamento solicitado via site!`;
 
-        // Redirecionar para WhatsApp
-        const whatsappUrl = `https://wa.me/5511999999999?text=${encodeURIComponent(mensagem)}`;
-        window.open(whatsappUrl, '_blank');
-        
-        alert('Agendamento realizado com sucesso!');
-        onClose();
-        
-        // Limpar apenas campos de agendamento
-        setFormData(prev => ({
-          ...prev,
-          servico: '',
-          data: '',
-          horario: ''
-        }));
-      } else {
-        alert('Erro ao salvar agendamento. Tente novamente.');
-      }
+      // Redirecionar para WhatsApp
+      const whatsappUrl = `https://wa.me/5511999999999?text=${encodeURIComponent(mensagem)}`;
+      window.open(whatsappUrl, '_blank');
+      
+      alert('Agendamento processado! Você será redirecionado para o WhatsApp para confirmar.');
+      onClose();
+      
+      // Limpar apenas campos de agendamento
+      setFormData(prev => ({
+        ...prev,
+        servico: '',
+        data: '',
+        horario: ''
+      }));
     } catch (error) {
       console.error('Erro ao agendar:', error);
-      alert('Erro ao conectar com o servidor.');
+      alert('Erro ao processar agendamento. Tente novamente.');
     }
 
     setLoading(false);
@@ -125,7 +141,7 @@ Agendamento registrado no sistema!`;
   // Se não estiver logado, mostrar tela de login necessário
   if (!user) {
     return (
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
         <div className="bg-white rounded-lg max-w-md w-full p-6 text-center">
           <div className="mb-4">
             <svg className="w-16 h-16 text-blue-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -157,13 +173,13 @@ Agendamento registrado no sistema!`;
     );
   }
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
       <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Agendar Horário</h2>
-            <p className="text-sm text-gray-600">Olá, {user.nome}!</p>
+            <p className="text-sm text-gray-600">Olá, {user?.nome || 'Usuário'}!</p>
           </div>
           <button
             onClick={onClose}
