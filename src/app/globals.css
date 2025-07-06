@@ -1,7 +1,9 @@
 /* 
  * Tailwind CSS imports
  * Estas diretivas são processadas pelo PostCSS + Tailwind
+ * @note: Os warnings sobre @tailwind e @apply são normais e podem ser ignorados
  */
+/* eslint-disable-next-line */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

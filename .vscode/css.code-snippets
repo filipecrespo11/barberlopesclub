@@ -1,0 +1,17 @@
+{
+  "tailwind-base": {
+    "prefix": "@tailwind base",
+    "body": ["@tailwind base;"],
+    "description": "Tailwind CSS base styles"
+  },
+  "tailwind-components": {
+    "prefix": "@tailwind components",
+    "body": ["@tailwind components;"],
+    "description": "Tailwind CSS component styles"
+  },
+  "tailwind-utilities": {
+    "prefix": "@tailwind utilities", 
+    "body": ["@tailwind utilities;"],
+    "description": "Tailwind CSS utility styles"
+  }
+}
