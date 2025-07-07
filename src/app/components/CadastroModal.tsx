@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { apiRequest, API_CONFIG } from "@/app/utils/api";
+import { CadastroData, GoogleOAuthConfig } from "@/app/types";
 
 interface CadastroModalProps {
   isOpen: boolean;
@@ -89,10 +90,15 @@ export default function CadastroModal({ isOpen, onClose, onSwitchToLogin }: Cada
       });
 
       // Se retornar código de desenvolvimento, preencher automaticamente
-      if (response.codigo_dev || response.code) {
-        const codigo = response.codigo_dev || response.code;
-        console.log('Código de desenvolvimento:', codigo);
+      if (response.codigo_dev) {
+        const codigo = response.codigo_dev;
+        console.log('🔐 Código de desenvolvimento recebido:', codigo);
         setCodigoVerificacao(codigo);
+        
+        // Mostrar mensagem específica para modo desenvolvimento
+        if (response.debug) {
+          console.log('ℹ️ Modo desenvolvimento:', response.debug);
+        }
       }
       
       // Ir para o step de verificação
