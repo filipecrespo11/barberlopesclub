@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 import { apiRequest, API_CONFIG } from "@/app/utils/api";
-import { CadastroData, GoogleOAuthConfig } from "@/app/types";
 
 interface CadastroModalProps {
   isOpen: boolean;
