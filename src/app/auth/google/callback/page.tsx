@@ -19,6 +19,11 @@ export default function GoogleCallback() {
         if (error) {
           setStatus('error');
           setMessage('Autenticação cancelada pelo usuário.');
+          // Comunica erro para opener
+          if (window.opener) {
+            window.opener.postMessage({ type: 'google-auth-error', message: 'Autenticação cancelada pelo usuário.' }, window.location.origin);
+            window.close();
+          }
           setTimeout(() => router.push('/'), 3000);
           return;
         }
@@ -26,6 +31,11 @@ export default function GoogleCallback() {
         if (!code) {
           setStatus('error');
           setMessage('Código de autorização não encontrado.');
+          // Comunica erro para opener
+          if (window.opener) {
+            window.opener.postMessage({ type: 'google-auth-error', message: 'Código de autorização não encontrado.' }, window.location.origin);
+            window.close();
+          }
           setTimeout(() => router.push('/'), 3000);
           return;
         }
@@ -40,26 +50,38 @@ export default function GoogleCallback() {
         });
 
         if (response.success) {
-          // Salvar dados do usuário
           localStorage.setItem('user', JSON.stringify(response.user));
           localStorage.setItem('token', response.token);
-          
           setStatus('success');
           setMessage('Login realizado com sucesso! Redirecionando...');
+          // Comunica sucesso para opener
+          if (window.opener) {
+            window.opener.postMessage({ type: 'google-auth-success', user: response.user, token: response.token }, window.location.origin);
+            window.close();
+          }
           setTimeout(() => router.push('/'), 2000);
         } else {
           setStatus('error');
           setMessage(response.message || 'Erro na autenticação');
+          // Comunica erro para opener
+          if (window.opener) {
+            window.opener.postMessage({ type: 'google-auth-error', message: response.message || 'Erro na autenticação' }, window.location.origin);
+            window.close();
+          }
           setTimeout(() => router.push('/'), 3000);
         }
       } catch (error) {
         console.error('Erro no callback:', error);
         setStatus('error');
         setMessage('Erro interno. Tente novamente.');
+        // Comunica erro para opener
+        if (window.opener) {
+          window.opener.postMessage({ type: 'google-auth-error', message: 'Erro interno. Tente novamente.' }, window.location.origin);
+          window.close();
+        }
         setTimeout(() => router.push('/'), 3000);
       }
     };
-
     handleCallback();
   }, [searchParams, router]);
 

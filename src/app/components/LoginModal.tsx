@@ -26,6 +26,21 @@ export default function LoginModal({ isOpen, onClose, onSwitchToCadastro, onLogi
     setErro(''); // Limpar erro ao digitar
   };
 
+  // Utilitário para abrir popup centralizado
+  function openPopup(url: string, title: string, w: number, h: number) {
+    const dualScreenLeft = window.screenLeft !== undefined ? window.screenLeft : window.screenX;
+    const dualScreenTop = window.screenTop !== undefined ? window.screenTop : window.screenY;
+    const width = window.innerWidth ? window.innerWidth : document.documentElement.clientWidth;
+    const height = window.innerHeight ? window.innerHeight : document.documentElement.clientHeight;
+    const left = width / 2 - w / 2 + dualScreenLeft;
+    const top = height / 2 - h / 2 + dualScreenTop;
+    window.open(
+      url,
+      title,
+      `scrollbars=yes, width=${w}, height=${h}, top=${top}, left=${left}`
+    );
+  }
+
   const handleGoogleLogin = async () => {
     try {
       // Buscar configurações do Google OAuth do backend
@@ -41,9 +56,22 @@ export default function LoginModal({ isOpen, onClose, onSwitchToCadastro, onLogi
       // Construir URL de redirect baseada na URL atual
       const redirectUri = `${window.location.origin}/auth/google/callback`;
       
-      // Redirecionar para Google OAuth
-      const googleAuthUrl = `https://accounts.google.com/oauth2/v2/auth?client_id=${googleConfig.clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=openid%20profile%20email&response_type=code&state=login`;
-      window.location.href = googleAuthUrl;
+      const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${googleConfig.clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=openid%20profile%20email&response_type=code&state=login`;
+      // Abrir popup
+      openPopup(googleAuthUrl, 'Login Google', 500, 600);
+      // Listener para receber mensagem do popup
+      window.addEventListener('message', (event) => {
+        if (event.origin !== window.location.origin) return;
+        if (event.data && event.data.type === 'google-auth-success') {
+          localStorage.setItem('user', JSON.stringify(event.data.user));
+          localStorage.setItem('token', event.data.token);
+          onLoginSuccess(event.data.user);
+          onClose();
+        }
+        if (event.data && event.data.type === 'google-auth-error') {
+          setErro(event.data.message || 'Erro na autenticação Google');
+        }
+      }, { once: true });
     } catch (error) {
       console.error('Erro ao buscar configurações do Google:', error);
       alert('Erro ao configurar autenticação com Google. Tente novamente.');
