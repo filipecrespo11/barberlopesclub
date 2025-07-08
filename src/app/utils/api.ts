@@ -1,19 +1,20 @@
 // Configuração da API
 export const API_CONFIG = {
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
   endpoints: {
     auth: {
-      login: '/auterota/login',
-      cadastro: '/auterota/iniciar-cadastro',
-      verificarCodigo: '/auterota/verificar-codigo',
-      googleConfig: '/auterota/google/config',
+      login: '/login',
+      cadastro: '/iniciar-cadastro',
+      verificarCodigo: '/verificar-codigo',
+      googleConfig: '/google/config',
+      googleCallback: '/auth/google/callback',
     },
     agendamentos: {
-      criar: '/auterota/agendar',
+      criar: '/agendar',
     },
     usuarios: {
-      listar: '/auterota/usuarios',
-      criar: '/auterota/criausuarios',
+      listar: '/usuarios',
+      criar: '/criausuarios',
     }
   }
 };

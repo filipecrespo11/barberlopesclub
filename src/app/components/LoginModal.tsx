@@ -103,10 +103,10 @@ export default function LoginModal({ isOpen, onClose, onSwitchToCadastro, onLogi
 
     try {
       const response = await apiRequest(API_CONFIG.endpoints.auth.login, {
-        method: "POST",
+        method: 'POST',
         body: JSON.stringify({
           email: formData.email,
-          password: formData.password,
+          senha: formData.password
         }),
       });
 

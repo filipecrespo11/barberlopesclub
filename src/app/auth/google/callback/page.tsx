@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { apiRequest } from '@/app/utils/api';
+import { apiRequest, API_CONFIG } from '@/app/utils/api';
 
 export default function GoogleCallback() {
   const router = useRouter();
@@ -41,7 +41,8 @@ export default function GoogleCallback() {
         }
 
         // Enviar código para o backend processar
-        const response = await apiRequest('/auterota/auth/google/callback', {
+        // Nota: Assumindo que o endpoint correto está em API_CONFIG.endpoints.auth.googleCallback
+        const response = await apiRequest(API_CONFIG.endpoints.auth.googleCallback, {
           method: 'POST',
           body: JSON.stringify({
             code,
