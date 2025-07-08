@@ -5,13 +5,7 @@ import AgendamentoModal from "./components/AgendamentoModal";
 import LoginModal from "./components/LoginModal";
 import CadastroModal from "./components/CadastroModal";
 
-// Interface para tipagem de usuário
-interface User {
-  id: string;
-  nome: string;
-  email: string;
-  telefone: string;
-}
+import type { User } from "./types";
 
 export default function Home() {
   const [isAgendamentoModalOpen, setIsAgendamentoModalOpen] = useState(false);
@@ -53,8 +47,8 @@ export default function Home() {
   };
   const handleLoginSuccess = (userData: User) => {
     // Salvar usuário no localStorage (já feito no modal)
-    // Forçar re-render do header
     window.dispatchEvent(new CustomEvent('userLoggedIn', { detail: userData }));
+    setIsAgendamentoModalOpen(true); // Abrir modal de agendamento após login
   };
 
   const handleLoginRequired = () => {

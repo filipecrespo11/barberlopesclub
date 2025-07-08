@@ -1,6 +1,21 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { apiRequest, API_CONFIG } from "@/app/utils/api";
+
+// Utilitário para abrir popup centralizado (igual ao LoginModal)
+function openPopup(url: string, title: string, w: number, h: number) {
+  const dualScreenLeft = window.screenLeft !== undefined ? window.screenLeft : window.screenX;
+  const dualScreenTop = window.screenTop !== undefined ? window.screenTop : window.screenY;
+  const width = window.innerWidth ? window.innerWidth : document.documentElement.clientWidth;
+  const height = window.innerHeight ? window.innerHeight : document.documentElement.clientHeight;
+  const left = width / 2 - w / 2 + dualScreenLeft;
+  const top = height / 2 - h / 2 + dualScreenTop;
+  return window.open(
+    url,
+    title,
+    `scrollbars=yes, width=${w}, height=${h}, top=${top}, left=${left}`
+  );
+}
 
 interface CadastroModalProps {
   isOpen: boolean;
@@ -14,17 +29,44 @@ export default function CadastroModal({ isOpen, onClose, onSwitchToLogin }: Cada
     nome: '',
     email: '',
     telefone: '',
-    senha: '',
+    password: '',
     confirmarSenha: ''
   });
   const [codigoVerificacao, setCodigoVerificacao] = useState('');
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState('');
+  const googlePopupRef = useRef<Window | null>(null);
+
+  // Listener para receber dados do Google OAuth
+  useEffect(() => {
+    function handleGoogleMessage(event: MessageEvent) {
+      if (event.origin !== window.location.origin) return;
+      if (event.data && event.data.user) {
+        // Fechar popup
+        if (googlePopupRef.current) {
+          googlePopupRef.current.close();
+        }
+        // Preencher dados do usuário no formulário
+        setFormData((prev) => ({
+          ...prev,
+          nome: event.data.user.nome_completo || '',
+          email: event.data.user.email || '',
+          password: '',
+          confirmarSenha: ''
+        }));
+        setStep('cadastro');
+        setErro('');
+      }
+    }
+    window.addEventListener('message', handleGoogleMessage);
+    return () => window.removeEventListener('message', handleGoogleMessage);
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      // Permitir tanto "senha" quanto "password" para compatibilidade
+      [e.target.name === 'senha' ? 'password' : e.target.name]: e.target.value
     });
     setErro(''); // Limpar erro ao digitar
   };
@@ -49,9 +91,9 @@ export default function CadastroModal({ isOpen, onClose, onSwitchToLogin }: Cada
       // Construir URL de redirect baseada na URL atual
       const redirectUri = `${window.location.origin}/auth/google/callback`;
       
-      // Redirecionar para Google OAuth
-      const googleAuthUrl = `https://accounts.google.com/oauth2/v2/auth?client_id=${googleConfig.clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=openid%20profile%20email&response_type=code&state=signup`;
-      window.location.href = googleAuthUrl;
+      // Redirecionar para Google OAuth em popup
+      const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${googleConfig.clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=openid%20profile%20email&response_type=code&state=signup`;
+      googlePopupRef.current = openPopup(googleAuthUrl, 'Cadastro Google', 500, 600);
     } catch (error) {
       console.error('Erro ao buscar configurações do Google:', error);
       alert('Erro ao configurar autenticação com Google. Tente novamente.');
@@ -64,13 +106,13 @@ export default function CadastroModal({ isOpen, onClose, onSwitchToLogin }: Cada
     setErro('');
 
     // Validações
-    if (formData.senha !== formData.confirmarSenha) {
+    if (formData.password !== formData.confirmarSenha) {
       setErro('As senhas não coincidem');
       setLoading(false);
       return;
     }
 
-    if (formData.senha.length < 6) {
+    if (formData.password.length < 6) {
       setErro('A senha deve ter pelo menos 6 caracteres');
       setLoading(false);
       return;
@@ -82,7 +124,7 @@ export default function CadastroModal({ isOpen, onClose, onSwitchToLogin }: Cada
         body: JSON.stringify({
           nome_completo: formData.nome,
           username: formData.email, // Usando email como username
-          password: formData.senha,
+          password: formData.password,
           tel: formData.telefone,
           email: formData.email
         }),
@@ -211,7 +253,7 @@ interface CadastroFormProps {
     nome: string;
     email: string;
     telefone: string;
-    senha: string;
+    password: string;
     confirmarSenha: string;
   };
   loading: boolean;
@@ -321,8 +363,8 @@ function CadastroForm({
           </label>
           <input
             type="password"
-            name="senha"
-            value={formData.senha}
+            name="password"
+            value={formData.password}
             onChange={onChange}
             required
             minLength={6}

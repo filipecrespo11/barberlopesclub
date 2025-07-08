@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { apiRequest, API_CONFIG } from "@/app/utils/api";
 import { User } from "@/app/types";
+import { useRouter } from "next/navigation";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -11,9 +12,10 @@ interface LoginModalProps {
 }
 
 export default function LoginModal({ isOpen, onClose, onSwitchToCadastro, onLoginSuccess }: LoginModalProps) {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     email: '',
-    senha: ''
+    password: ''
   });
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState('');
@@ -81,33 +83,33 @@ export default function LoginModal({ isOpen, onClose, onSwitchToCadastro, onLogi
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setErro('');
+    setErro("");
 
     try {
       const response = await apiRequest(API_CONFIG.endpoints.auth.login, {
-        method: 'POST',
+        method: "POST",
         body: JSON.stringify({
           email: formData.email,
-          password: formData.senha
+          password: formData.password,
         }),
       });
 
       // Login realizado com sucesso
-      localStorage.setItem('user', JSON.stringify(response.usuario));
-      localStorage.setItem('token', response.token);
+      localStorage.setItem("user", JSON.stringify(response.usuario));
+      localStorage.setItem("token", response.token);
       
       onLoginSuccess(response.usuario);
       onClose();
       
+      // Redirecionar para agenda após login
+      router.push("/agenda");
+      
       // Limpar formulário
-      setFormData({
-        email: '',
-        senha: ''
-      });
+      setFormData({ email: "", password: "" });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro ao conectar com o servidor';
+      const errorMessage = error instanceof Error ? error.message : "Erro ao conectar com o servidor";
       setErro(errorMessage);
-      console.error('Erro no login:', error);
+      console.error("Erro no login:", error);
     }
 
     setLoading(false);
@@ -187,7 +189,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToCadastro, onLogi
             <input
               type="password"
               name="senha"
-              value={formData.senha}
+              value={formData.password}
               onChange={handleChange}
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
