@@ -9,14 +9,14 @@ export interface User {
 
 export interface LoginData {
   email: string;
-  senha: string;
+  password: string;
 }
 
 export interface CadastroData {
   nome: string;
   email: string;
   telefone: string;
-  senha: string;
+  password: string;
 }
 
 export interface AgendamentoData {

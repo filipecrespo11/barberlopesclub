@@ -29,8 +29,8 @@ export default function AgendamentoModal({ isOpen, onClose, onLoginRequired }: A
         setUser(parsedUser);
         setFormData(prev => ({
           ...prev,
-          nome: parsedUser.nome || '',
-          telefone: parsedUser.telefone || ''
+          nome: parsedUser.nome_completo || '',
+          telefone: parsedUser.tel || ''
         }));
       }
     }
@@ -179,7 +179,7 @@ Agendamento solicitado via site!`;
         <div className="flex items-center justify-between p-6 border-b">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Agendar Horário</h2>
-            <p className="text-sm text-gray-600">Olá, {user?.nome || 'Usuário'}!</p>
+            <p className="text-sm text-gray-600">Olá, {user?.nome_completo || 'Usuário'}!</p>
           </div>
           <button
             onClick={onClose}

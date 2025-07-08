@@ -1,8 +1,8 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { apiRequest, API_CONFIG } from "@/app/utils/api";
 import { User } from "@/app/types";
-import { useRouter } from "next/navigation";
+import { openPopup } from "@/app/utils/popup";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -12,13 +12,31 @@ interface LoginModalProps {
 }
 
 export default function LoginModal({ isOpen, onClose, onSwitchToCadastro, onLoginSuccess }: LoginModalProps) {
-  const router = useRouter();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState('');
+
+  const resetState = useCallback(() => {
+    setFormData({ email: '', password: '' });
+    setErro('');
+    setLoading(false);
+  }, []);
+
+  const handleClose = useCallback(() => {
+    resetState();
+    onClose();
+  }, [onClose, resetState]);
+
+  // Limpa o estado se o modal for fechado externamente
+  useEffect(() => {
+    if (!isOpen) {
+      resetState();
+    }
+  }, [isOpen, resetState]);
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -28,22 +46,31 @@ export default function LoginModal({ isOpen, onClose, onSwitchToCadastro, onLogi
     setErro(''); // Limpar erro ao digitar
   };
 
-  // Utilitário para abrir popup centralizado
-  function openPopup(url: string, title: string, w: number, h: number) {
-    const dualScreenLeft = window.screenLeft !== undefined ? window.screenLeft : window.screenX;
-    const dualScreenTop = window.screenTop !== undefined ? window.screenTop : window.screenY;
-    const width = window.innerWidth ? window.innerWidth : document.documentElement.clientWidth;
-    const height = window.innerHeight ? window.innerHeight : document.documentElement.clientHeight;
-    const left = width / 2 - w / 2 + dualScreenLeft;
-    const top = height / 2 - h / 2 + dualScreenTop;
-    window.open(
-      url,
-      title,
-      `scrollbars=yes, width=${w}, height=${h}, top=${top}, left=${left}`
-    );
-  }
+  // Listener para o popup do Google
+  useEffect(() => {
+    const handleAuthMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
 
-  const handleGoogleLogin = async () => {
+      if (event.data?.type === 'google-auth-success') {
+        localStorage.setItem('user', JSON.stringify(event.data.user));
+        localStorage.setItem('token', event.data.token);
+        onLoginSuccess(event.data.user);
+        handleClose();
+      } else if (event.data?.type === 'google-auth-error') {
+        setErro(event.data.message || 'Erro na autenticação Google');
+      }
+    };
+
+    window.addEventListener('message', handleAuthMessage);
+
+    return () => {
+      window.removeEventListener('message', handleAuthMessage);
+    };
+  }, [onLoginSuccess, handleClose]);
+
+
+  const handleGoogleLogin = useCallback(async () => {
+    setErro(''); // Limpar erros anteriores
     try {
       // Buscar configurações do Google OAuth do backend
       const googleConfig = await apiRequest(API_CONFIG.endpoints.auth.googleConfig, {
@@ -59,26 +86,15 @@ export default function LoginModal({ isOpen, onClose, onSwitchToCadastro, onLogi
       const redirectUri = `${window.location.origin}/auth/google/callback`;
       
       const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${googleConfig.clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=openid%20profile%20email&response_type=code&state=login`;
+      
       // Abrir popup
       openPopup(googleAuthUrl, 'Login Google', 500, 600);
-      // Listener para receber mensagem do popup
-      window.addEventListener('message', (event) => {
-        if (event.origin !== window.location.origin) return;
-        if (event.data && event.data.type === 'google-auth-success') {
-          localStorage.setItem('user', JSON.stringify(event.data.user));
-          localStorage.setItem('token', event.data.token);
-          onLoginSuccess(event.data.user);
-          onClose();
-        }
-        if (event.data && event.data.type === 'google-auth-error') {
-          setErro(event.data.message || 'Erro na autenticação Google');
-        }
-      }, { once: true });
+
     } catch (error) {
       console.error('Erro ao buscar configurações do Google:', error);
-      alert('Erro ao configurar autenticação com Google. Tente novamente.');
+      setErro('Erro ao configurar autenticação com Google. Tente novamente.');
     }
-  };
+  }, []); // Nenhuma dependência de props ou state é necessária aqui
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,13 +115,8 @@ export default function LoginModal({ isOpen, onClose, onSwitchToCadastro, onLogi
       localStorage.setItem("token", response.token);
       
       onLoginSuccess(response.usuario);
-      onClose();
+      handleClose(); // Limpa o estado e fecha o modal
       
-      // Redirecionar para agenda após login
-      router.push("/agenda");
-      
-      // Limpar formulário
-      setFormData({ email: "", password: "" });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Erro ao conectar com o servidor";
       setErro(errorMessage);
@@ -124,7 +135,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToCadastro, onLogi
         <div className="flex items-center justify-between p-6 border-b">
           <h2 className="text-2xl font-bold text-gray-900">Entrar</h2>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="text-gray-500 hover:text-gray-700 transition-colors"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -188,7 +199,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToCadastro, onLogi
             </label>
             <input
               type="password"
-              name="senha"
+              name="password"
               value={formData.password}
               onChange={handleChange}
               required
@@ -209,7 +220,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToCadastro, onLogi
             
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
             >
               Cancelar

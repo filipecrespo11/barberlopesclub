@@ -1,21 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { apiRequest, API_CONFIG } from "@/app/utils/api";
-
-// Utilitário para abrir popup centralizado (igual ao LoginModal)
-function openPopup(url: string, title: string, w: number, h: number) {
-  const dualScreenLeft = window.screenLeft !== undefined ? window.screenLeft : window.screenX;
-  const dualScreenTop = window.screenTop !== undefined ? window.screenTop : window.screenY;
-  const width = window.innerWidth ? window.innerWidth : document.documentElement.clientWidth;
-  const height = window.innerHeight ? window.innerHeight : document.documentElement.clientHeight;
-  const left = width / 2 - w / 2 + dualScreenLeft;
-  const top = height / 2 - h / 2 + dualScreenTop;
-  return window.open(
-    url,
-    title,
-    `scrollbars=yes, width=${w}, height=${h}, top=${top}, left=${left}`
-  );
-}
+import { openPopup } from "@/app/utils/popup";
 
 interface CadastroModalProps {
   isOpen: boolean;
@@ -36,6 +22,26 @@ export default function CadastroModal({ isOpen, onClose, onSwitchToLogin }: Cada
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState('');
   const googlePopupRef = useRef<Window | null>(null);
+
+  // Limpa o estado do modal sempre que ele for fechado
+  useEffect(() => {
+    if (!isOpen) {
+      // Atraso para não limpar antes da animação de fechar
+      setTimeout(() => {
+        setStep('cadastro');
+        setFormData({
+          nome: '',
+          email: '',
+          telefone: '',
+          password: '',
+          confirmarSenha: ''
+        });
+        setCodigoVerificacao('');
+        setErro('');
+        setLoading(false);
+      }, 300); // 300ms para coincidir com transições comuns
+    }
+  }, [isOpen]);
 
   // Listener para receber dados do Google OAuth
   useEffect(() => {
@@ -308,9 +314,9 @@ function CadastroForm({
       </div>
 
       <form onSubmit={onSubmit} className="space-y-4">
-        {/* Nome */}
+        {/* Nome Completo */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
             Nome Completo *
           </label>
           <input
@@ -319,14 +325,14 @@ function CadastroForm({
             value={formData.nome}
             onChange={onChange}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="Seu nome completo"
           />
         </div>
 
         {/* Email */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
             Email *
           </label>
           <input
@@ -335,30 +341,29 @@ function CadastroForm({
             value={formData.email}
             onChange={onChange}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="seu@email.com"
           />
         </div>
 
         {/* Telefone */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Telefone *
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Telefone (WhatsApp)
           </label>
           <input
             type="tel"
             name="telefone"
             value={formData.telefone}
             onChange={onChange}
-            required
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="(11) 99999-9999"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="(XX) XXXXX-XXXX"
           />
         </div>
 
         {/* Senha */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
             Senha *
           </label>
           <input
@@ -368,14 +373,14 @@ function CadastroForm({
             onChange={onChange}
             required
             minLength={6}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="Mínimo 6 caracteres"
           />
         </div>
 
         {/* Confirmar Senha */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
             Confirmar Senha *
           </label>
           <input
@@ -384,21 +389,20 @@ function CadastroForm({
             value={formData.confirmarSenha}
             onChange={onChange}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Confirme sua senha"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Repita sua senha"
           />
         </div>
 
-        {/* Buttons */}
+        {/* Botões */}
         <div className="space-y-4 pt-4">
           <button
             type="submit"
             disabled={loading}
-            className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium disabled:opacity-50"
           >
             {loading ? 'Criando conta...' : 'Criar Conta'}
           </button>
-          
           <button
             type="button"
             onClick={onClose}
@@ -407,26 +411,26 @@ function CadastroForm({
             Cancelar
           </button>
         </div>
-
-        {/* Link para Login */}
-        <div className="text-center pt-4 border-t">
-          <p className="text-sm text-gray-600">
-            Já tem uma conta?{' '}
-            <button
-              type="button"
-              onClick={onSwitchToLogin}
-              className="text-blue-600 hover:text-blue-700 font-medium"
-            >
-              Fazer Login
-            </button>
-          </p>
-        </div>
       </form>
+
+      {/* Link para Login */}
+      <div className="text-center pt-4 mt-4 border-t">
+        <p className="text-sm text-gray-600">
+          Já tem uma conta?{' '}
+          <button
+            type="button"
+            onClick={onSwitchToLogin}
+            className="text-blue-600 hover:text-blue-700 font-medium"
+          >
+            Entrar
+          </button>
+        </p>
+      </div>
     </>
   );
 }
 
-// Componente para o formulário de verificação
+// Componente para o formulário de verificação de código
 interface VerificacaoFormProps {
   email: string;
   codigo: string;
@@ -437,77 +441,50 @@ interface VerificacaoFormProps {
   onVoltar: () => void;
 }
 
-function VerificacaoForm({ 
-  email, 
-  codigo, 
-  loading, 
-  erro, 
-  onSubmit, 
-  onCodigoChange, 
-  onVoltar 
-}: VerificacaoFormProps) {
+function VerificacaoForm({ email, codigo, loading, erro, onSubmit, onCodigoChange, onVoltar }: VerificacaoFormProps) {
   return (
-    <>
+    <form onSubmit={onSubmit} className="space-y-6">
       {erro && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mb-4">
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
           {erro}
         </div>
       )}
+      
+      <p className="text-gray-600 text-center">
+        Enviamos um código de verificação para <strong>{email}</strong>. Por favor, verifique sua caixa de entrada (e spam).
+      </p>
 
-      <div className="text-center mb-6">
-        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-          </svg>
-        </div>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">
-          Verifique seu email
-        </h3>
-        <p className="text-sm text-gray-600">
-          Enviamos um código de verificação para:
-        </p>
-        <p className="text-sm font-medium text-gray-900 mt-1">
-          {email}
-        </p>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Código de Verificação *
+        </label>
+        <input
+          type="text"
+          value={codigo}
+          onChange={onCodigoChange}
+          required
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-center tracking-[0.5em]"
+          placeholder="______"
+        />
       </div>
 
-      <form onSubmit={onSubmit} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Código de Verificação *
-          </label>
-          <input
-            type="text"
-            value={codigo}
-            onChange={onCodigoChange}
-            required
-            maxLength={6}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center text-lg font-mono"
-            placeholder="000000"
-          />
-          <p className="text-xs text-gray-500 mt-1">
-            Digite o código de 6 dígitos que enviamos para seu email
-          </p>
-        </div>
-
-        <div className="space-y-3 pt-4">
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? 'Verificando...' : 'Verificar Código'}
-          </button>
-          
-          <button
-            type="button"
-            onClick={onVoltar}
-            className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
-          >
-            Voltar
-          </button>
-        </div>
-      </form>
-    </>
+      <div className="space-y-4 pt-2">
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium disabled:opacity-50"
+        >
+          {loading ? 'Verificando...' : 'Verificar e Criar Conta'}
+        </button>
+        
+        <button
+          type="button"
+          onClick={onVoltar}
+          className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+        >
+          Voltar
+        </button>
+      </div>
+    </form>
   );
 }

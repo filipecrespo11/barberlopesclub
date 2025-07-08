@@ -6,7 +6,7 @@ export const API_CONFIG = {
       login: '/auterota/login',
       cadastro: '/auterota/iniciar-cadastro',
       verificarCodigo: '/auterota/verificar-codigo',
-      googleConfig: '/auterota/google-config',
+      googleConfig: '/auterota/google/config',
     },
     agendamentos: {
       criar: '/auterota/agendar',
