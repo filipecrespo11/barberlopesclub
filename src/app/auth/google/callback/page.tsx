@@ -38,10 +38,9 @@ export default function GoogleCallback() {
           }
           setTimeout(() => router.push('/'), 3000);
           return;
-        }
-
-        // Enviar código para o backend processar
-        // Nota: Assumindo que o endpoint correto está em API_CONFIG.endpoints.auth.googleCallback
+        }        // Enviar código para o backend processar
+        console.log('🔵 Enviando código Google para backend:', { code: code?.substring(0, 20) + '...', state });
+        
         const response = await apiRequest(API_CONFIG.endpoints.auth.googleCallback, {
           method: 'POST',
           body: JSON.stringify({
@@ -49,6 +48,8 @@ export default function GoogleCallback() {
             state
           }),
         });
+
+        console.log('🔵 Resposta do backend Google:', response);
 
         if (response.success) {
           localStorage.setItem('user', JSON.stringify(response.user));

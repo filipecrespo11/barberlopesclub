@@ -94,12 +94,20 @@ export default function AgendamentoModal({ isOpen, onClose, onLoginRequired }: A
         const response = await apiRequest(API_CONFIG.endpoints.agendamentos.criar, {
           method: 'POST',
           body: JSON.stringify(agendamentoData)
-        });
-
-        console.log('Agendamento salvo com sucesso:', response);
+        });        console.log('Agendamento salvo com sucesso:', response);
       } catch (apiError) {
         console.error('Erro ao salvar no backend:', apiError);
-        // Continuar mesmo com erro da API para não bloquear o WhatsApp
+        
+        // Se for erro de autenticação, redirecionar para login
+        if (apiError instanceof Error && (apiError.message.includes('401') || apiError.message.includes('não autenticado'))) {
+          alert('Sua sessão expirou. Faça login novamente para continuar.');
+          onClose();
+          onLoginRequired();
+          return;
+        }
+        
+        // Para outros erros, continuar com WhatsApp mas alertar o usuário
+        console.warn('Agendamento não foi salvo no sistema, mas será enviado via WhatsApp');
       }
       
       // Criar mensagem para WhatsApp

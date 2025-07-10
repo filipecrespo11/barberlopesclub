@@ -34,12 +34,12 @@ export const apiRequest = async (endpoint: string, options: RequestInit = {}) =>
                          endpoint.includes('/auterota/iniciar-cadastro') || 
                          endpoint.includes('/auterota/verificar-codigo') ||
                          endpoint.includes('/auterota/google-config') ||
-                         endpoint.includes('/auterota/auth/google/callback');
-  
-  if (!isAuthEndpoint) {
+                         endpoint.includes('/auterota/auth/google/callback');    if (!isAuthEndpoint) {
     const token = localStorage.getItem('token');
     if (token) {
-      console.log('🔑 Token encontrado para request:', token.substring(0, 20) + '...');
+      console.log('🔑 Token encontrado para request:', token.substring(0, 30) + '...');
+      console.log('🔑 Token completo:', token);
+      console.log('🔑 Endpoint sendo chamado:', endpoint);
       // Try both formats - some backends expect different header formats
       defaultOptions.headers = {
         ...defaultOptions.headers,
@@ -48,6 +48,7 @@ export const apiRequest = async (endpoint: string, options: RequestInit = {}) =>
       };
     } else {
       console.warn('⚠️ Nenhum token encontrado no localStorage para request autenticado');
+      console.warn('⚠️ Endpoint sendo chamado:', endpoint);
     }
   }
   try {
@@ -58,15 +59,20 @@ export const apiRequest = async (endpoint: string, options: RequestInit = {}) =>
     const response = await fetch(url, defaultOptions);
     
     console.log('📥 Resposta recebida:', response.status, response.statusText);
-    console.log('📥 Headers de resposta:', Object.fromEntries(response.headers.entries()));
-    
-    if (!response.ok) {
+    console.log('📥 Headers de resposta:', Object.fromEntries(response.headers.entries()));    if (!response.ok) {
       // Tentar fazer parse do JSON de erro, se falhar usar mensagem genérica
       try {
         const errorData = await response.json();
-        // console.error('❌ Erro do servidor:', errorData);
-        throw new Error(errorData.message || errorData.error || `Erro no servidor (${response.status})`);      } catch {
-        // console.error('❌ Erro ao fazer parse da resposta:', parseError);
+        console.log('❌ Erro do servidor:', errorData);
+        throw new Error(errorData.message || errorData.error || `Erro no servidor (${response.status})`);
+      } catch {
+        console.log('❌ Erro ao fazer parse da resposta de erro. Status:', response.status);
+        
+        // Tratamento específico para erro 401
+        if (response.status === 401) {
+          throw new Error('Usuário não autenticado. Faça login novamente.');
+        }
+        
         throw new Error(`Erro de conexão com o servidor (${response.status})`);
       }
     }
