@@ -95,20 +95,29 @@ export default function LoginModal({ isOpen, onClose, onSwitchToCadastro, onLogi
       setErro('Erro ao configurar autenticação com Google. Tente novamente.');
     }
   }, []); // Nenhuma dependência de props ou state é necessária aqui
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setErro("");
 
-    try {
+    console.log('🔐 ========= INICIANDO LOGIN =========');
+    console.log('📧 Email:', formData.email);
+    console.log('🔑 Senha:', formData.password ? '***oculta***' : 'VAZIA!');
+    console.log('📊 Form Data completo:', { ...formData, password: '***oculta***' });
+
+    try {      const loginData = {
+        username: formData.email,
+        password: formData.password
+      };
+      
+      console.log('📤 Enviando dados:', { ...loginData, password: '***oculta***' });
+      
       const response = await apiRequest(API_CONFIG.endpoints.auth.login, {
         method: 'POST',
-        body: JSON.stringify({
-          email: formData.email,
-          senha: formData.password
-        }),
+        body: JSON.stringify(loginData),
       });
+
+      console.log('✅ Login bem-sucedido!', response);
 
       // Login realizado com sucesso
       localStorage.setItem("user", JSON.stringify(response.usuario));
@@ -118,6 +127,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToCadastro, onLogi
       handleClose(); // Limpa o estado e fecha o modal
       
     } catch (error) {
+      console.error('❌ Erro no login:', error);
       const errorMessage = error instanceof Error ? error.message : "Erro ao conectar com o servidor";
       setErro(errorMessage);
       console.error("Erro no login:", error);
