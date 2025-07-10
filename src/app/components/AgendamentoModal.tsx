@@ -77,7 +77,9 @@ export default function AgendamentoModal({ isOpen, onClose, onLoginRequired }: A
 
     try {
       // Tentar salvar no backend primeiro
-      try {
+      try {        console.log('🔍 Debug - Usuario atual:', user);
+        console.log('🔍 Debug - Token no localStorage:', localStorage.getItem('token'));
+        
         const agendamentoData = {
           nome: formData.nome,
           telefone: formData.telefone,

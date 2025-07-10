@@ -80,16 +80,14 @@ export default function CadastroModal({ isOpen, onClose, onSwitchToLogin }: Cada
   const handleCodigoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCodigoVerificacao(e.target.value);
     setErro('');
-  };
-
-  const handleGoogleSignup = async () => {
+  };  const handleGoogleSignup = async () => {
     try {
       // Buscar configurações do Google OAuth do backend
       const googleConfig = await apiRequest(API_CONFIG.endpoints.auth.googleConfig, {
         method: 'GET',
       });
       
-      if (!googleConfig.clientId) {
+      if (!googleConfig || !googleConfig.clientId) {
         alert('Google OAuth não está configurado no servidor.');
         return;
       }
@@ -102,7 +100,11 @@ export default function CadastroModal({ isOpen, onClose, onSwitchToLogin }: Cada
       googlePopupRef.current = openPopup(googleAuthUrl, 'Cadastro Google', 500, 600);
     } catch (error) {
       console.error('Erro ao buscar configurações do Google:', error);
-      alert('Erro ao configurar autenticação com Google. Tente novamente.');
+      if (error instanceof Error && error.message.includes('404')) {
+        alert('Google OAuth não está disponível no momento. Use o formulário abaixo.');
+      } else {
+        alert('Erro ao configurar autenticação com Google. Tente novamente.');
+      }
     }
   };
 

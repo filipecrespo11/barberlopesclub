@@ -68,7 +68,6 @@ export default function LoginModal({ isOpen, onClose, onSwitchToCadastro, onLogi
     };
   }, [onLoginSuccess, handleClose]);
 
-
   const handleGoogleLogin = useCallback(async () => {
     setErro(''); // Limpar erros anteriores
     try {
@@ -77,8 +76,8 @@ export default function LoginModal({ isOpen, onClose, onSwitchToCadastro, onLogi
         method: 'GET',
       });
       
-      if (!googleConfig.clientId) {
-        alert('Google OAuth não está configurado no servidor.');
+      if (!googleConfig || !googleConfig.clientId) {
+        setErro('Google OAuth não está configurado no servidor.');
         return;
       }
 
@@ -92,9 +91,14 @@ export default function LoginModal({ isOpen, onClose, onSwitchToCadastro, onLogi
 
     } catch (error) {
       console.error('Erro ao buscar configurações do Google:', error);
-      setErro('Erro ao configurar autenticação com Google. Tente novamente.');
+      // Se for 404, significa que o Google OAuth não está implementado no backend
+      if (error instanceof Error && error.message.includes('404')) {
+        setErro('Google OAuth não está disponível no momento. Use email e senha.');
+      } else {
+        setErro('Erro ao configurar autenticação com Google. Tente novamente.');
+      }
     }
-  }, []); // Nenhuma dependência de props ou state é necessária aqui
+  }, []);// Nenhuma dependência de props ou state é necessária aqui
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
