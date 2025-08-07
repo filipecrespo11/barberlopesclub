@@ -9,6 +9,7 @@ export interface User {
   foto?: string;
   verificado: boolean;
   googleId?: string;
+  isAdmin?: boolean;
 }
 
 export interface LoginResponse {
