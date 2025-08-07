@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { apiRequest, API_CONFIG } from "@/app/utils/api";
 import { User } from "@/app/types";
 
@@ -44,11 +44,41 @@ export default function AgendamentoModal({ isOpen, onClose, onLoginRequired }: A
     { id: 'pezinho', nome: 'Pezinho', preco: 'R$ 10,00' }
   ];
 
-  const horarios = [
+  const horarios = useMemo(() => [
     '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
     '14:00', '14:30', '15:00', '15:30', '16:00', '16:30',
     '17:00', '17:30', '18:00', '18:30', '19:00', '19:30'
-  ];
+  ], []);
+
+  const [horariosDisponiveis, setHorariosDisponiveis] = useState<string[]>(horarios);
+
+  useEffect(() => {
+    // Atualiza horários disponíveis ao mudar serviço ou data
+    async function fetchHorarios() {
+      if (!formData.data) {
+        setHorariosDisponiveis(horarios);
+        return;
+      }
+      try {
+        const res = await apiRequest('/auterota/agendamentos', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        if (res.success && Array.isArray(res.data)) {
+          // Filtra agendamentos para a data selecionada
+          const agendamentosData = res.data.filter((ag: { data: string }) => ag.data === formData.data);
+          // Remove horários já agendados
+          const horariosIndisponiveis = agendamentosData.map((ag: { horario: string }) => ag.horario);
+          setHorariosDisponiveis(horarios.filter(h => !horariosIndisponiveis.includes(h)));
+        } else {
+          setHorariosDisponiveis(horarios);
+        }
+      } catch {
+        setHorariosDisponiveis(horarios);
+      }
+    }
+    fetchHorarios();
+  }, [formData.data, horarios]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
@@ -77,9 +107,7 @@ export default function AgendamentoModal({ isOpen, onClose, onLoginRequired }: A
 
     try {
       // Tentar salvar no backend primeiro
-      try {        console.log('🔍 Debug - Usuario atual:', user);
-        console.log('🔍 Debug - Token no localStorage:', localStorage.getItem('token'));
-        
+      try {
         const agendamentoData = {
           nome: formData.nome,
           telefone: formData.telefone,
@@ -88,16 +116,11 @@ export default function AgendamentoModal({ isOpen, onClose, onLoginRequired }: A
           horario: formData.horario,
           usuario_id: user.id
         };
-
-        console.log('Tentando salvar agendamento:', agendamentoData);
-        
-        const response = await apiRequest(API_CONFIG.endpoints.agendamentos.criar, {
+        await apiRequest(API_CONFIG.endpoints.agendamentos.criar, {
           method: 'POST',
           body: JSON.stringify(agendamentoData)
-        });        console.log('Agendamento salvo com sucesso:', response);
+        });
       } catch (apiError) {
-        console.error('Erro ao salvar no backend:', apiError);
-        
         // Se for erro de autenticação, redirecionar para login
         if (apiError instanceof Error && (apiError.message.includes('401') || apiError.message.includes('não autenticado'))) {
           alert('Sua sessão expirou. Faça login novamente para continuar.');
@@ -105,7 +128,6 @@ export default function AgendamentoModal({ isOpen, onClose, onLoginRequired }: A
           onLoginRequired();
           return;
         }
-        
         // Para outros erros, continuar com WhatsApp mas alertar o usuário
         console.warn('Agendamento não foi salvo no sistema, mas será enviado via WhatsApp');
       }
@@ -281,7 +303,7 @@ Agendamento solicitado via site!`;
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="">Selecione um horário</option>
-              {horarios.map(horario => (
+              {horariosDisponiveis.map(horario => (
                 <option key={horario} value={horario}>
                   {horario}
                 </option>

@@ -12,6 +12,18 @@ export default function Home() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isCadastroModalOpen, setIsCadastroModalOpen] = useState(false);
 
+  // Adiciona botão para painel admin (apenas para admin logado)
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      const user = JSON.parse(userData);
+      if (user.isAdmin) {
+        setShowAdminPanel(true);
+      }
+    }
+  }, []);
+
   useEffect(() => {
     // Verificar se o usuário está logado
     const userData = localStorage.getItem('user');
@@ -392,6 +404,16 @@ export default function Home() {
       onClose={closeCadastroModal}
       onSwitchToLogin={switchToLogin}
     />
+      {showAdminPanel && (
+        <div className="fixed top-4 right-4 z-[9999]">
+          <button
+            className="bg-yellow-500 text-black px-4 py-2 rounded shadow hover:bg-yellow-600 font-bold"
+            onClick={() => window.open('/admin', '_blank')}
+          >
+            Painel Admin
+          </button>
+        </div>
+      )}
   </>
   );
 }
