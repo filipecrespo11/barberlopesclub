@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { apiRequest } from "@/app/utils/api";
+import { useRouter } from "next/navigation";
 
 function AdminLogin({ onSuccess }: { onSuccess: () => void }) {
   const [email, setEmail] = useState("");
@@ -79,6 +80,7 @@ import AdminAgendamentosPanel from "../components/AdminAgendamentosPanel";
 export default function AdminPage() {
   const [autenticado, setAutenticado] = useState(false);
   const [checked, setChecked] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -93,7 +95,17 @@ export default function AdminPage() {
 
   if (!checked) return null;
   return autenticado ? (
-    <AdminAgendamentosPanel />
+    <>
+      <div className="flex justify-end p-8">
+        <button
+          className="bg-yellow-500 text-black px-4 py-2 rounded shadow hover:bg-yellow-600 font-bold"
+          onClick={() => router.push("/admin/criar-admin")}
+        >
+          Criar Novo Admin
+        </button>
+      </div>
+      <AdminAgendamentosPanel />
+    </>
   ) : (
     <AdminLogin onSuccess={() => setAutenticado(true)} />
   );

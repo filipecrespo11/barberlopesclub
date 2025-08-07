@@ -2,11 +2,13 @@
 import { useEffect, useState } from "react";
 import { apiRequest } from "@/app/utils/api";
 import type { AgendamentoData } from "@/app/types/index";
+import { useRouter } from "next/navigation";
 
 export default function AdminAgendamentosPanel() {
   const [agendamentos, setAgendamentos] = useState<AgendamentoData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const router = useRouter();
 
   useEffect(() => {
     // Verifica se o usuário é admin
@@ -46,6 +48,12 @@ export default function AdminAgendamentosPanel() {
   return (
     <div className="p-8">
       <h2 className="text-2xl font-bold mb-6">Painel Administrativo - Agendamentos</h2>
+      <button
+        className="mb-6 bg-yellow-500 text-black px-4 py-2 rounded shadow hover:bg-yellow-600 font-bold"
+        onClick={() => router.push("/admin/criar-admin")}
+      >
+        Criar Novo Admin
+      </button>
       <table className="min-w-full bg-white border rounded-lg overflow-hidden">
         <thead>
           <tr className="bg-gray-100">
