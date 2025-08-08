@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { apiRequest } from "@/app/utils/api";
 import { useRouter } from "next/navigation";
 
-function AdminLogin({ onSuccess }: { onSuccess: () => void }) {
+function AdminLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -18,16 +18,21 @@ function AdminLogin({ onSuccess }: { onSuccess: () => void }) {
         method: "POST",
         body: JSON.stringify({ email, password }),
       });
-      if (res.success && res.usuario && res.usuario.isAdmin) {
+      if (res.success && res.usuario && (res.usuario.isAdmin === true || res.usuario.isAdmin === "true")) {
         localStorage.setItem("user", JSON.stringify(res.usuario));
         localStorage.setItem("token", res.token);
-        onSuccess();
+        window.location.reload(); // força re-render e atualização do estado
+        return;
       } else {
         setError("Acesso negado. Apenas administradores podem entrar.");
       }
     } catch (err) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setError((err as any).message || "Erro ao autenticar.");
+      // Corrigido para evitar uso de 'any'
+      if (err instanceof Error) {
+        setError(err.message || "Erro ao autenticar.");
+      } else {
+        setError("Erro ao autenticar.");
+      }
     } finally {
       setLoading(false);
     }
@@ -83,14 +88,23 @@ export default function AdminPage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    function checkAdmin() {
       const userData = localStorage.getItem("user");
       if (userData) {
-        const user = JSON.parse(userData);
-        setAutenticado(!!user.isAdmin);
+        try {
+          const user = JSON.parse(userData);
+          setAutenticado(user.isAdmin === true || user.isAdmin === "true");
+        } catch {
+          setAutenticado(false);
+        }
+      } else {
+        setAutenticado(false);
       }
       setChecked(true);
     }
+    checkAdmin();
+    window.addEventListener("storage", checkAdmin);
+    return () => window.removeEventListener("storage", checkAdmin);
   }, []);
 
   if (!checked) return null;
@@ -107,6 +121,6 @@ export default function AdminPage() {
       <AdminAgendamentosPanel />
     </>
   ) : (
-    <AdminLogin onSuccess={() => setAutenticado(true)} />
+    <AdminLogin />
   );
 }

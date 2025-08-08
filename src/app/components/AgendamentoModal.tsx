@@ -53,23 +53,20 @@ export default function AgendamentoModal({ isOpen, onClose, onLoginRequired }: A
   const [horariosDisponiveis, setHorariosDisponiveis] = useState<string[]>(horarios);
 
   useEffect(() => {
-    // Atualiza horários disponíveis ao mudar serviço ou data
-    async function fetchHorarios() {
-      if (!formData.data) {
+    // Consulta horários disponíveis diretamente do backend
+    async function fetchHorariosDisponiveis() {
+      if (!formData.data || !formData.servico) {
         setHorariosDisponiveis(horarios);
         return;
       }
       try {
-        const res = await apiRequest('/auterota/agendamentos', {
+        // Endpoint que retorna apenas horários disponíveis para a data e serviço
+        const res = await apiRequest(`/auterota/agendamentos?data=${formData.data}&servico=${formData.servico}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
         });
         if (res.success && Array.isArray(res.data)) {
-          // Filtra agendamentos para a data selecionada
-          const agendamentosData = res.data.filter((ag: { data: string }) => ag.data === formData.data);
-          // Remove horários já agendados
-          const horariosIndisponiveis = agendamentosData.map((ag: { horario: string }) => ag.horario);
-          setHorariosDisponiveis(horarios.filter(h => !horariosIndisponiveis.includes(h)));
+          setHorariosDisponiveis(res.data);
         } else {
           setHorariosDisponiveis(horarios);
         }
@@ -77,8 +74,8 @@ export default function AgendamentoModal({ isOpen, onClose, onLoginRequired }: A
         setHorariosDisponiveis(horarios);
       }
     }
-    fetchHorarios();
-  }, [formData.data, horarios]);
+    fetchHorariosDisponiveis();
+  }, [formData.data, formData.servico, horarios]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
@@ -301,6 +298,7 @@ Agendamento solicitado via site!`;
               onChange={handleChange}
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              disabled={horariosDisponiveis.length === 0}
             >
               <option value="">Selecione um horário</option>
               {horariosDisponiveis.map(horario => (
@@ -309,6 +307,9 @@ Agendamento solicitado via site!`;
                 </option>
               ))}
             </select>
+            {horariosDisponiveis.length === 0 && (
+              <p className="text-red-500 text-sm mt-2">Nenhum horário disponível para esta data e serviço.</p>
+            )}
           </div>
 
           {/* Buttons */}
@@ -322,7 +323,7 @@ Agendamento solicitado via site!`;
             </button>
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || horariosDisponiveis.length === 0}
               className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Agendando...' : 'Agendar via WhatsApp'}
