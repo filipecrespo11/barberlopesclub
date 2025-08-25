@@ -66,7 +66,18 @@ export default function AgendamentoModal({ isOpen, onClose, onLoginRequired }: A
           headers: { 'Content-Type': 'application/json' },
         });
         if (res.success && Array.isArray(res.data)) {
-          setHorariosDisponiveis(res.data);
+          // A API hoje retorna horários OCUPADOS (ou agendamentos com campo horario/hora).
+          // Vamos normalizar e filtrar esses horários do conjunto total para exibir APENAS DISPONÍVEIS.
+          const occupied = (res.data as any[])
+            .map((h) => {
+              if (typeof h === 'string') return h;
+              if (h && typeof h === 'object') return h.horario || h.hora || '';
+              return '';
+            })
+            .filter((v): v is string => typeof v === 'string' && v.length > 0);
+          const occupiedSet = new Set(occupied);
+          const available = horarios.filter((h) => !occupiedSet.has(h));
+          setHorariosDisponiveis(available.length > 0 ? available : []);
         } else {
           setHorariosDisponiveis(horarios);
         }
@@ -301,8 +312,8 @@ Agendamento solicitado via site!`;
               disabled={horariosDisponiveis.length === 0}
             >
               <option value="">Selecione um horário</option>
-              {horariosDisponiveis.map(horario => (
-                <option key={horario} value={horario}>
+              {horariosDisponiveis.map((horario, idx) => (
+                <option key={`${horario}-${idx}`} value={horario}>
                   {horario}
                 </option>
               ))}

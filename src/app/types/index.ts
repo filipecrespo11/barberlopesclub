@@ -20,11 +20,14 @@ export interface CadastroData {
 }
 
 export interface AgendamentoData {
+  id?: string | number;
+  _id?: string;
   nome: string;
   telefone: string;
   servico: string;
   data: string;
   horario: string;
+  hora?: string;
   usuario_id?: string;
 }
 
