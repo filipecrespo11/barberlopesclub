@@ -10,6 +10,14 @@ export default function AdminAgendamentosPanel() {
   const [error, setError] = useState("");
   const router = useRouter();
 
+  // Filtros
+  const [searchTerm, setSearchTerm] = useState("");
+  const [dateStart, setDateStart] = useState<string>("");
+  const [dateEnd, setDateEnd] = useState<string>("");
+  // Paginação
+  const [page, setPage] = useState<number>(1);
+  const pageSize = 10;
+
   useEffect(() => {
     // Verifica se o usuário é admin
     const userData = localStorage.getItem("user");
@@ -81,6 +89,61 @@ export default function AdminAgendamentosPanel() {
     }
   }
 
+  // Helpers de filtro
+  const normalizeStr = (v?: string) => (v || "").toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
+  const parseDate = (v?: string) => {
+    if (!v) return null;
+    // aceita YYYY-MM-DD ou DD/MM/YYYY
+    if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return new Date(v + "T00:00:00");
+    const m = v.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (m) return new Date(`${m[3]}-${m[2]}-${m[1]}T00:00:00`);
+    const d = new Date(v);
+    return isNaN(d.getTime()) ? null : d;
+  };
+
+  const filteredAgendamentos = useMemo(() => {
+    const s = normalizeStr(searchTerm);
+    const start = parseDate(dateStart);
+    const end = parseDate(dateEnd);
+    const filtered = agendamentos.filter((ag) => {
+      // filtro de busca
+      const nome = normalizeStr(ag.nome);
+      const tel = normalizeStr(ag.telefone);
+      const matchSearch = !s || nome.includes(s) || tel.includes(s);
+
+      // filtro de data (inclusive)
+      const d = parseDate(ag.data);
+      const matchStart = !start || (d && d >= start);
+      const matchEnd = !end || (d && d <= end);
+
+      return matchSearch && matchStart && matchEnd;
+    });
+    // ordenar por data ASC e horário ASC
+    const toComparable = (ag: AgendamentoData) => {
+      const d = parseDate(ag.data)?.getTime() ?? 0;
+      const h = (ag.horario || (ag as any).hora || "00:00");
+      const [hh, mm] = (typeof h === 'string' && /^\d{2}:\d{2}$/.test(h)) ? h.split(':').map(Number) : [0, 0];
+      return d + hh * 60_000 * 60 + mm * 60_000; // date millis + time offset
+    };
+    filtered.sort((a, b) => toComparable(a) - toComparable(b));
+    return filtered;
+  }, [agendamentos, searchTerm, dateStart, dateEnd]);
+
+  // Reset página ao alterar filtros/lista
+  useEffect(() => { setPage(1); }, [searchTerm, dateStart, dateEnd, agendamentos.length]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredAgendamentos.length / pageSize));
+  const pageClamped = Math.min(page, totalPages);
+  const startIndex = (pageClamped - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const pagedAgendamentos = filteredAgendamentos.slice(startIndex, endIndex);
+
+  const clearFilters = () => {
+    setSearchTerm("");
+    setDateStart("");
+    setDateEnd("");
+  };
+
   async function handleDelete(item: AgendamentoData) {
     const id = item?.id || (item as any)?._id;
     if (!id) return alert('Não é possível excluir: registro sem ID.');
@@ -139,7 +202,7 @@ export default function AdminAgendamentosPanel() {
 
   return (
     <div className="p-8">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <h2 className="text-2xl font-bold">Painel Administrativo - Agendamentos</h2>
         <button
           className="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 font-bold"
@@ -147,6 +210,73 @@ export default function AdminAgendamentosPanel() {
         >
           Novo Agendamento
         </button>
+      </div>
+
+      {/* Barra de filtros */}
+      <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-3">
+        <div className="col-span-1 md:col-span-2">
+          <label className="block text-sm font-medium text-gray-700 mb-1">Buscar (nome ou telefone)</label>
+          <input
+            type="text"
+            className="w-full px-3 py-2 border rounded"
+            placeholder="Ex.: João ou 2299..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Data inicial</label>
+          <input
+            type="date"
+            className="w-full px-3 py-2 border rounded"
+            value={dateStart}
+            onChange={(e) => setDateStart(e.target.value)}
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Data final</label>
+          <div className="flex gap-2">
+            <input
+              type="date"
+              className="w-full px-3 py-2 border rounded"
+              value={dateEnd}
+              onChange={(e) => setDateEnd(e.target.value)}
+            />
+            <button
+              type="button"
+              className="px-3 py-2 border rounded hover:bg-gray-50"
+              onClick={clearFilters}
+              title="Limpar filtros"
+            >
+              Limpar
+            </button>
+          </div>
+        </div>
+      </div>
+      <div className="mb-3 flex items-center justify-between text-sm text-gray-600">
+        <span>
+          Exibindo {filteredAgendamentos.length === 0 ? 0 : startIndex + 1}
+          -{Math.min(endIndex, filteredAgendamentos.length)} de {filteredAgendamentos.length}
+        </span>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            className="px-3 py-1 border rounded disabled:opacity-50"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={pageClamped <= 1}
+          >
+            Anterior
+          </button>
+          <span>Página {pageClamped} / {totalPages}</span>
+          <button
+            type="button"
+            className="px-3 py-1 border rounded disabled:opacity-50"
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={pageClamped >= totalPages}
+          >
+            Próxima
+          </button>
+        </div>
       </div>
       <table className="min-w-full bg-white border rounded-lg overflow-hidden">
         <thead>
@@ -160,12 +290,12 @@ export default function AdminAgendamentosPanel() {
           </tr>
         </thead>
         <tbody>
-          {agendamentos.length === 0 ? (
+          {filteredAgendamentos.length === 0 ? (
             <tr>
-              <td colSpan={6} className="py-4 text-center text-gray-500">Nenhum agendamento encontrado.</td>
+              <td colSpan={6} className="py-4 text-center text-gray-500">Nenhum agendamento encontrado com os filtros atuais.</td>
             </tr>
           ) : (
-            agendamentos.map((ag, idx) => (
+            pagedAgendamentos.map((ag, idx) => (
               <tr key={(ag as any)?.id ?? (ag as any)?._id ?? idx} className="border-b hover:bg-gray-50">
                 <td className="py-2 px-4">{ag.nome}</td>
                 <td className="py-2 px-4">{ag.telefone}</td>
