@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
-import { apiRequest } from "@/app/utils/api";
+import { apiRequest, API_CONFIG } from "@/app/utils/api";
+import bcrypt from "bcryptjs";
 
 export default function CriarAdminPage() {
   const [form, setForm] = useState({ nome: "", email: "", password: "", tel: "" });
@@ -20,19 +21,60 @@ export default function CriarAdminPage() {
     setError("");
     setSuccess("");
     try {
-      const res = await apiRequest("/auterota/criar-admin", {
-        method: "POST",
-        body: JSON.stringify(form)
+      // Verifica token presente e não expirado antes de enviar
+      const token = typeof window !== 'undefined' ? (localStorage.getItem('token') || localStorage.getItem('authToken') || '') : '';
+      const isExpired = (() => {
+        if (!token) return true;
+        const parts = token.split('.');
+        if (parts.length < 2) return false;
+        try {
+          const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+          const exp = Number(payload?.exp);
+          if (!exp) return false;
+          const now = Math.floor(Date.now() / 1000);
+          return exp <= now;
+        } catch {
+          return false;
+        }
+      })();
+      if (!token) {
+        setError('Não autenticado. Faça login como admin.');
+        return;
+      }
+      if (isExpired) {
+        setError('Sessão expirada. Faça login novamente como admin.');
+        return;
+      }
+
+      // Hash de senha no cliente (ideal: backend)
+      const hashed = await bcrypt.hash(form.password, 10);
+      // Envie somente os campos que o backend precisa; flags de admin são impostas no servidor
+      const payload = {
+        nome_completo: form.nome,
+        username: form.email,
+        email: form.email,
+        tel: form.tel,
+        password: hashed,
+      };
+      // Endpoint dedicado a admins (proteção autenticaAdmin no backend)
+      const res = await apiRequest('/api/admins', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        skipAuth: true,
+        headers: token ? { Authorization: `Bearer ${token}`, 'x-access-token': token } : undefined,
       });
-      if (res.success) {
+      const ok = res?.success === true || !!res?.usuario || !!res?.user || !!res?.id || !!res?._id || !!res?.admin;
+      if (ok) {
         setSuccess("Administrador criado com sucesso!");
         setForm({ nome: "", email: "", password: "", tel: "" });
       } else {
-        setError(res.message || "Erro ao criar administrador.");
+        setError(res?.message || "Erro ao criar administrador.");
       }
-    } catch (err) {
-      const errorMsg = (err instanceof Error && err.message) ? err.message : "Erro ao criar administrador.";
-      setError(errorMsg);
+    } catch (err: any) {
+      const status = err?.status;
+      if (status === 401) setError('Não autenticado. Faça login como admin.');
+      else if (status === 403) setError('Permissão negada. Apenas administradores podem criar outros admins.');
+      else setError(err?.data?.message || err?.message || "Erro ao criar administrador.");
     } finally {
       setLoading(false);
     }

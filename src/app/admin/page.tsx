@@ -233,7 +233,8 @@ export default function AdminPage() {
   if (!checked) return null;
   return autenticado ? (
     <>
-      <div className="flex justify-end p-8">
+      <div className="flex justify-end p-12"></div>
+      <div className="fixed top-4 right-4 z-[9999]">
         <button
           className="bg-yellow-500 text-black px-4 py-2 rounded shadow hover:bg-yellow-600 font-bold"
           onClick={() => router.push("/admin/criar-admin")}

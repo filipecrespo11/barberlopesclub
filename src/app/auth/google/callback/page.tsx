@@ -41,23 +41,51 @@ export default function GoogleCallback() {
         }
 
         // Enviar código para o backend processar
-        // Nota: Assumindo que o endpoint correto está em API_CONFIG.endpoints.auth.googleCallback
-        const response = await apiRequest(API_CONFIG.endpoints.auth.googleCallback, {
-          method: 'POST',
-          body: JSON.stringify({
-            code,
-            state
-          }),
-        });
+        // Inclui redirectUri explícito, pois muitos backends exigem validação rígida
+    const redirectUri = `${window.location.origin}/auth/google/callback`;
+        let response: any;
+        try {
+          response = await apiRequest(API_CONFIG.endpoints.auth.googleCallback, {
+            method: 'POST',
+      // Alguns backends esperam "redirect_uri" (snake_case)
+            body: JSON.stringify({ code, state, redirect_uri: redirectUri, redirectUri }),
+            skipAuth: true,
+          });
+        } catch (e: any) {
+          // Alguns backends esperam GET com query params; faz fallback automático
+          const status = e?.status;
+          if (status === 404 || status === 405) {
+            const qp = new URLSearchParams({ code: code!, state: state || '', redirect_uri: redirectUri }).toString();
+            // 1) tenta GET no mesmo caminho
+            try {
+              response = await apiRequest(`${API_CONFIG.endpoints.auth.googleCallback}?${qp}`, { method: 'GET', skipAuth: true });
+            } catch (e2: any) {
+              // 2) tenta caminho alternativo sem '/auth'
+              const altPath = '/auterota/google/callback';
+              try {
+                response = await apiRequest(altPath, { method: 'POST', body: JSON.stringify({ code, state, redirect_uri: redirectUri, redirectUri }), skipAuth: true });
+              } catch (e3: any) {
+                // 3) fallback final GET no caminho alternativo
+                response = await apiRequest(`${altPath}?${qp}`, { method: 'GET', skipAuth: true });
+              }
+            }
+          } else {
+            throw e;
+          }
+        }
 
-        if (response.success) {
-          localStorage.setItem('user', JSON.stringify(response.user));
-          localStorage.setItem('token', response.token);
+        // Considera sucesso se vier token e usuário, mesmo sem flag 'success'
+        const user = response.user || response.usuario || response.data?.usuario || response.data?.user;
+        const token = response.token || response.data?.token;
+        const ok = !!token && !!user;
+        if (ok) {
+          localStorage.setItem('user', JSON.stringify(user));
+          localStorage.setItem('token', token);
           setStatus('success');
           setMessage('Login realizado com sucesso! Redirecionando...');
           // Comunica sucesso para opener
           if (window.opener) {
-            window.opener.postMessage({ type: 'google-auth-success', user: response.user, token: response.token }, window.location.origin);
+            window.opener.postMessage({ type: 'google-auth-success', user, token }, window.location.origin);
             window.close();
           }
           setTimeout(() => router.push('/'), 2000);
@@ -74,10 +102,11 @@ export default function GoogleCallback() {
       } catch (error) {
         console.error('Erro no callback:', error);
         setStatus('error');
-        setMessage('Erro interno. Tente novamente.');
+        const msg = (error as any)?.data?.message || (error as any)?.message || 'Erro interno. Tente novamente.';
+        setMessage(msg);
         // Comunica erro para opener
         if (window.opener) {
-          window.opener.postMessage({ type: 'google-auth-error', message: 'Erro interno. Tente novamente.' }, window.location.origin);
+          window.opener.postMessage({ type: 'google-auth-error', message: msg }, window.location.origin);
           window.close();
         }
         setTimeout(() => router.push('/'), 3000);

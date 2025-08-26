@@ -23,7 +23,15 @@ export const API_CONFIG = {
 
 // Função utilitária para fazer chamadas para a API
 export const apiRequest = async (endpoint: string, options: RequestInit & { skipAuth?: boolean } = {}) => {
-  const url = `${API_CONFIG.baseURL}${endpoint}`;
+  // Detecta rotas internas do Next (/api/...) e URLs absolutas
+  let url: string;
+  if (/^https?:\/\//i.test(endpoint)) {
+    url = endpoint; // URL absoluta
+  } else if (endpoint.startsWith('/api/')) {
+    url = endpoint; // Rota interna do Next (mesma origem)
+  } else {
+    url = `${API_CONFIG.baseURL}${endpoint}`; // Endpoint do backend
+  }
   
   const defaultOptions: RequestInit = {
     headers: {
