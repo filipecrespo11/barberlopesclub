@@ -56,7 +56,7 @@ export default function Header() {
           </div>
         </div>{/* Mobile menu button */}
         <button 
-          className="lg:hidden fixed top-6 right-6 p-2 text-white hover:text-blue-400 transition-colors z-60"
+          className="lg:hidden fixed top-6 left-6 p-2 text-white hover:text-blue-400 transition-colors z-60"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
         >
           <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
