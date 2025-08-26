@@ -170,6 +170,42 @@ export default function AdminAgendamentosPanel() {
     setIsModalOpen(true);
   }
 
+  // Gera slots de horário (30 em 30 min)
+  const generateSlots = (start = "08:00", end = "23:30", stepMin = 30) => {
+    const [sh, sm] = start.split(":").map(Number);
+    const [eh, em] = end.split(":").map(Number);
+    const startMin = sh * 60 + sm;
+    const endMin = eh * 60 + em;
+    const out: string[] = [];
+    for (let m = startMin; m <= endMin; m += stepMin) {
+      const hh = String(Math.floor(m / 60)).padStart(2, "0");
+      const mm = String(m % 60).padStart(2, "0");
+      out.push(`${hh}:${mm}`);
+    }
+    return out;
+  };
+
+  const allTimeSlots = useMemo(() => generateSlots("08:00", "23:30", 30), []);
+
+  // Lista de horários disponíveis conforme a data selecionada no modal
+  const availableTimes = useMemo(() => {
+    if (!editItem?.data) return [];
+    const occupied = new Set(
+      agendamentos
+        .filter(a => a.data === editItem.data)
+        .map(a => a.horario || (a as any).hora)
+        .filter(Boolean)
+    );
+    let avail = allTimeSlots.filter(t => !occupied.has(t));
+
+    // Se estiver editando, garanta que o horário atual conste na lista
+    if (editItem?.id && editItem?.horario && !avail.includes(editItem.horario)) {
+      avail = [editItem.horario, ...avail];
+    }
+    // dedup
+    return Array.from(new Set(avail));
+  }, [agendamentos, editItem?.data, editItem?.id, editItem?.horario, allTimeSlots]);
+
   async function handleSave(item: AgendamentoData) {
     const payload = {
       nome: item.nome,
@@ -178,18 +214,35 @@ export default function AdminAgendamentosPanel() {
       data: item.data,
       horario: item.horario,
     };
+
+    // Validação básica
+    if (!payload.data) return alert('Informe uma data.');
+    if (!payload.horario) return alert('Selecione um horário.');
+    if (!availableTimes.includes(payload.horario)) {
+      return alert('Horário indisponível para a data selecionada. Escolha outro.');
+    }
     if (item.id) {
-      const resp = await apiRequest(API_CONFIG.endpoints.agendamentos.atualizar(item.id), {
-        method: 'PUT',
-        body: JSON.stringify(payload),
-      });
-      if ((resp as any)?.success === false) return alert(resp?.message || 'Erro ao atualizar');
+      try {
+        const resp = await apiRequest(API_CONFIG.endpoints.agendamentos.atualizar(item.id), {
+          method: 'PUT',
+          body: JSON.stringify(payload),
+        });
+        if ((resp as any)?.success === false) return alert(resp?.message || 'Erro ao atualizar');
+      } catch (e: any) {
+        if (e?.status === 409) return alert(e?.message || 'Horário já ocupado. Escolha outro.');
+        return alert(e?.message || 'Erro ao atualizar');
+      }
     } else {
-      const resp = await apiRequest(API_CONFIG.endpoints.agendamentos.criar, {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      });
-      if ((resp as any)?.success === false) return alert(resp?.message || 'Erro ao criar');
+      try {
+        const resp = await apiRequest(API_CONFIG.endpoints.agendamentos.criar, {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        });
+        if ((resp as any)?.success === false) return alert(resp?.message || 'Erro ao criar');
+      } catch (e: any) {
+        if (e?.status === 409) return alert(e?.message || 'Horário já ocupado. Escolha outro.');
+        return alert(e?.message || 'Erro ao criar');
+      }
     }
     setIsModalOpen(false);
     setEditItem(null);
@@ -204,12 +257,30 @@ export default function AdminAgendamentosPanel() {
     <div className="p-8">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-2xl font-bold">Painel Administrativo - Agendamentos</h2>
-        <button
-          className="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 font-bold"
-          onClick={openNew}
-        >
-          Novo Agendamento
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            className="px-4 py-2 border rounded hover:bg-gray-50"
+            onClick={() => {
+              if (confirm('Deseja sair da conta de administrador?')) {
+                try {
+                  localStorage.removeItem('user');
+                  localStorage.removeItem('token');
+                  localStorage.removeItem('authToken');
+                } catch {}
+                router.replace('/admin');
+              }
+            }}
+            title="Sair"
+          >
+            Sair
+          </button>
+          <button
+            className="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 font-bold"
+            onClick={openNew}
+          >
+            Novo Agendamento
+          </button>
+        </div>
       </div>
 
       {/* Barra de filtros */}
@@ -344,7 +415,17 @@ export default function AdminAgendamentosPanel() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Horário</label>
-                <input placeholder="HH:MM" className="w-full px-3 py-2 border rounded" value={editItem?.horario || ''} onChange={(e) => setEditItem(prev => prev ? { ...prev, horario: e.target.value } : prev)} />
+                <select
+                  className="w-full px-3 py-2 border rounded"
+                  value={editItem?.horario || ''}
+                  onChange={(e) => setEditItem(prev => prev ? { ...prev, horario: e.target.value } : prev)}
+                  disabled={!editItem?.data}
+                >
+                  <option value="">{editItem?.data ? 'Selecione um horário' : 'Selecione a data primeiro'}</option>
+                  {availableTimes.map((h) => (
+                    <option key={h} value={h}>{h}</option>
+                  ))}
+                </select>
               </div>
               <div className="flex gap-3 pt-2">
                 <button className="flex-1 px-4 py-2 border rounded" onClick={() => { setIsModalOpen(false); setEditItem(null); }}>Cancelar</button>

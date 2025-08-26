@@ -78,27 +78,25 @@ export const apiRequest = async (endpoint: string, options: RequestInit & { skip
       console.log('📥 Headers de resposta:', Object.fromEntries(response.headers.entries()));
     }
     if (!response.ok) {
-      // Tentar fazer parse do JSON de erro, se falhar usar mensagem genérica
+      // Tenta parsear JSON de erro e anexa status/dados ao Error
+      let errorData: any = null;
       try {
-        const errorData = await response.json();
-        if (process.env.NODE_ENV !== 'production') {
-          console.log('❌ Erro do servidor:', errorData);
-        }
-        throw new Error(errorData.message || errorData.error || `Erro no servidor (${response.status})`);
+        errorData = await response.json();
       } catch {
-        if (process.env.NODE_ENV !== 'production') {
-          console.log('❌ Erro ao fazer parse da resposta de erro. Status:', response.status);
-        }
-        
-        // Tratamento específico para erro 401
-        if (response.status === 401) {
-          throw new Error('Usuário não autenticado. Faça login novamente.');
-        }
-        
-        throw new Error(`Erro de conexão com o servidor (${response.status})`);
+        // ignore
       }
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('❌ Erro do servidor:', errorData, 'status:', response.status);
+      }
+      const err: any = new Error(
+        (errorData && (errorData.message || errorData.error)) ||
+        (response.status === 401 ? 'Usuário não autenticado. Faça login novamente.' : `Erro no servidor (${response.status})`)
+      );
+      err.status = response.status;
+      err.data = errorData;
+      throw err;
     }
-    
+
     const data = await response.json();
     if (process.env.NODE_ENV !== 'production') {
       console.log('✅ Sucesso:', data);
