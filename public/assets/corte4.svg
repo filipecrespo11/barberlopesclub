@@ -1,8 +1,0 @@
-<!-- Placeholder SVG para estilo clássico -->
-<svg width="300" height="300" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
-  <rect width="300" height="300" fill="#1f2937"/>
-  <circle cx="150" cy="120" r="60" fill="#fbbf24"/>
-  <text x="150" y="210" text-anchor="middle" fill="#fbbf24" font-family="Arial, sans-serif" font-size="18" font-weight="bold">Estilo</text>
-  <text x="150" y="235" text-anchor="middle" fill="#fbbf24" font-family="Arial, sans-serif" font-size="18" font-weight="bold">Clássico</text>
-  <path d="M120 85 Q150 65 180 85" stroke="#1f2937" stroke-width="4" fill="none"/>
-</svg>

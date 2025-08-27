@@ -120,57 +120,78 @@ export default function Home() {
               <div className="flex items-center justify-between py-4 border-b border-gray-200">
                 <div className="flex items-center gap-4">
                   <div className="w-8 h-8">
-                    <svg viewBox="0 0 24 24" fill="currentColor" className="text-gray-600">
-                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.94-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
-                    </svg>
+                     <Image
+                      src="/assets/maquina.png"
+                      alt="Máquina"
+                      width={32}
+                      height={40}
+                      className="object-contain text-gray-600"
+                    />
                   </div>
                   <span className="text-lg font-medium text-gray-800">CORTE</span>
                 </div>
-                <span className="text-xl font-bold text-gray-900">30,00</span>
+                <span className="text-xl font-bold text-gray-900">35,00</span>
               </div>
               
               <div className="flex items-center justify-between py-4 border-b border-gray-200">
                 <div className="flex items-center gap-4">
                   <div className="w-8 h-8">
-                    <svg viewBox="0 0 24 24" fill="currentColor" className="text-gray-600">
-                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.94-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
-                    </svg>
+                    <Image
+                      src="/assets/navalha.png"
+                      alt="Navalha"
+                      width={32}
+                      height={40}
+                      className="object-contain text-gray-600"
+                    />
                   </div>
                   <span className="text-lg font-medium text-gray-800">BARBA</span>
                 </div>
-                <span className="text-xl font-bold text-gray-900">20,00</span>
+                <span className="text-xl font-bold text-gray-900">25,00</span>
               </div>
               
               <div className="flex items-center justify-between py-4 border-b border-gray-200">
                 <div className="flex items-center gap-4">
                   <div className="w-8 h-8">
-                    <svg viewBox="0 0 24 24" fill="currentColor" className="text-gray-600">
-                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.94-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
-                    </svg>
+                    <Image
+                      src="/assets/tesoura.png"
+                      alt="Tesoura"
+                      width={32}
+                      height={40}
+                      className="object-contain text-gray-600"
+                    />
                   </div>
                   <span className="text-lg font-medium text-gray-800">CABELO E BARBA</span>
                 </div>
-                <span className="text-xl font-bold text-gray-900">45,00</span>
+                <span className="text-xl font-bold text-gray-900">60,00</span>
               </div>
               
               <div className="flex items-center justify-between py-4 border-b border-gray-200">
                 <div className="flex items-center gap-4">
                   <div className="w-8 h-8">
-                    <svg viewBox="0 0 24 24" fill="currentColor" className="text-gray-600">
-                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.94-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
-                    </svg>
+                    <Image
+                      src="/assets/barber.png"
+                      alt="Barber"
+                      width={32}
+                      height={40}
+                      className="object-contain text-gray-600"
+                    />
                   </div>
                   <span className="text-lg font-medium text-gray-800">SOMBRANCELHA</span>
                 </div>
-                <span className="text-xl font-bold text-gray-900">5,00</span>
+                <span className="text-xl font-bold text-gray-900">15,00</span>
               </div>
               
               <div className="flex items-center justify-between py-4">
                 <div className="flex items-center gap-4">
                   <div className="w-8 h-8">
-                    <svg viewBox="0 0 24 24" fill="currentColor" className="text-gray-600">
-                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.94-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
-                    </svg>
+                     <Image
+                      src="/assets/pincel.png"
+                      alt="Pincel"
+                      width={32}
+                      height={40}
+                      className="object-contain text-gray-600"
+                    />
+
                   </div>
                   <span className="text-lg font-medium text-gray-800">PEZINHO</span>
                 </div>
@@ -183,7 +204,7 @@ export default function Home() {
         {/* Logo marca d'água */}
         <div className="absolute right-8 top-1/2 transform -translate-y-1/2 opacity-10">
           <Image 
-            src="/assets/lopesclubicon.png" 
+            src="/assets/logooriginal.jpeg" 
             alt="Logo" 
             className="w-64 h-64 object-contain" 
             width={256} 
@@ -231,14 +252,14 @@ export default function Home() {
               </button>
             </div>            <div className="grid grid-cols-1 gap-4">
               <Image
-                src="/assets/foto-unidade-1.svg"
+                src="/assets/foto-unidade-1.jpeg"
                 alt="Interior da Unidade"
                 className="w-full h-48 object-cover shadow-lg"
                 width={400}
                 height={192}
               />
               <Image
-                src="/assets/foto-unidade-2.svg"
+                src="/assets/foto-unidade-2.jpeg"
                 alt="Ambiente da Barbearia"
                 className="w-full h-48 object-cover shadow-lg"
                 width={400}
@@ -257,7 +278,7 @@ export default function Home() {
           </div>          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             <div className="group relative overflow-hidden shadow-lg">
               <Image
-                src="/assets/corte1.svg"
+                src="/assets/corte1.png"
                 alt="Corte Moderno"
                 className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-110"
                 width={400}
@@ -269,7 +290,7 @@ export default function Home() {
             </div>
             <div className="group relative overflow-hidden shadow-lg">
               <Image
-                src="/assets/corte2.svg"
+                src="/assets/corte2.jpeg"
                 alt="Barba Estilizada"
                 className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-110"
                 width={400}
@@ -281,7 +302,7 @@ export default function Home() {
             </div>
             <div className="group relative overflow-hidden shadow-lg">
               <Image
-                src="/assets/corte3.svg"
+                src="/assets/corte3.png"
                 alt="Combo Completo"
                 className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-110"
                 width={400}
@@ -293,7 +314,7 @@ export default function Home() {
             </div>
             <div className="group relative overflow-hidden shadow-lg">
               <Image
-                src="/assets/corte4.svg"
+                src="/assets/corte4.png"
                 alt="Estilo Clássico"
                 className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-110"
                 width={400}
@@ -305,7 +326,7 @@ export default function Home() {
             </div>
             <div className="group relative overflow-hidden shadow-lg">
               <Image
-                src="/assets/corte1.svg"
+                src="/assets/corte5.png"
                 alt="Degradê Moderno"
                 className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-110"
                 width={400}
@@ -317,7 +338,7 @@ export default function Home() {
             </div>
             <div className="group relative overflow-hidden shadow-lg">
               <Image
-                src="/assets/corte2.svg"
+                src="/assets/corte6.png"
                 alt="Corte Social"
                 className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-110"
                 width={400}
@@ -329,7 +350,7 @@ export default function Home() {
             </div>
             <div className="group relative overflow-hidden shadow-lg">
               <Image
-                src="/assets/corte3.svg"
+                src="/assets/corte7.png"
                 alt="Estilo Executivo"
                 className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-110"
                 width={400}
@@ -341,7 +362,7 @@ export default function Home() {
             </div>
             <div className="group relative overflow-hidden shadow-lg">
               <Image
-                src="/assets/corte4.svg"
+                src="/assets/corte8.png"
                 alt="Barba Completa"
                 className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-110"
                 width={400}

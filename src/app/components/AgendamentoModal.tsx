@@ -37,17 +37,17 @@ export default function AgendamentoModal({ isOpen, onClose, onLoginRequired }: A
   }, [isOpen]);
 
   const servicos = [
-    { id: 'corte', nome: 'Corte', preco: 'R$ 30,00' },
-    { id: 'barba', nome: 'Barba', preco: 'R$ 20,00' },
-    { id: 'cabelo-barba', nome: 'Cabelo e Barba', preco: 'R$ 45,00' },
-    { id: 'sombrancelha', nome: 'Sombrancelha', preco: 'R$ 5,00' },
+    { id: 'corte', nome: 'Corte', preco: 'R$ 35,00' },
+    { id: 'barba', nome: 'Barba', preco: 'R$ 25,00' },
+    { id: 'cabelo-barba', nome: 'Cabelo e Barba', preco: 'R$ 60,00' },
+    { id: 'sombrancelha', nome: 'Sombrancelha', preco: 'R$ 15,00' },
     { id: 'pezinho', nome: 'Pezinho', preco: 'R$ 10,00' }
   ];
 
   const horarios = useMemo(() => [
-    '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
-    '14:00', '14:30', '15:00', '15:30', '16:00', '16:30',
-    '17:00', '17:30', '18:00', '18:30', '19:00', '19:30'
+    '09:00', '10:00', '11:00',
+    '14:00', '15:00', '16:00',
+    '17:00', '18:00', '19:00'
   ], []);
 
   const [horariosDisponiveis, setHorariosDisponiveis] = useState<string[]>(horarios);

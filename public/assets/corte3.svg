@@ -1,9 +1,0 @@
-<!-- Placeholder SVG para combo completo -->
-<svg width="300" height="300" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
-  <rect width="300" height="300" fill="#1f2937"/>
-  <circle cx="150" cy="120" r="60" fill="#fbbf24"/>
-  <text x="150" y="210" text-anchor="middle" fill="#fbbf24" font-family="Arial, sans-serif" font-size="18" font-weight="bold">Combo</text>
-  <text x="150" y="235" text-anchor="middle" fill="#fbbf24" font-family="Arial, sans-serif" font-size="18" font-weight="bold">Completo</text>
-  <path d="M120 90 Q150 70 180 90" stroke="#1f2937" stroke-width="3" fill="none"/>
-  <rect x="130" y="140" width="40" height="20" rx="3" fill="#1f2937"/>
-</svg>
