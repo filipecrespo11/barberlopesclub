@@ -55,8 +55,8 @@ export const apiRequest = async (endpoint: string, options: RequestInit & { skip
     }
     // Optionally pick from cookies on server-side calls (when used in RSC, though apiRequest is client-first)
     if (token) {
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('🔑 Token encontrado para request:', token.substring(0, 8) + '...');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔑 Fazendo request autenticado...');
         console.log('🔑 Endpoint sendo chamado:', endpoint);
       }
       // Try both formats - some backends expect different header formats
@@ -73,17 +73,18 @@ export const apiRequest = async (endpoint: string, options: RequestInit & { skip
     }
   }
   try {
-    if (process.env.NODE_ENV !== 'production') {
+    if (process.env.NODE_ENV === 'development') {
       console.log('🚀 Fazendo requisição para:', url);
-      console.log('📝 Headers:', defaultOptions.headers);
-      console.log('📝 Body:', defaultOptions.body);
+      console.log('📝 Método:', defaultOptions.method || 'GET');
     }
     
     const response = await fetch(url, defaultOptions);
     
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('📥 Resposta recebida:', response.status, response.statusText);
-      console.log('📥 Headers de resposta:', Object.fromEntries(response.headers.entries()));
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📥 Status da resposta:', response.status);
+    }
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📥 Headers recebidos');
     }
     if (!response.ok) {
       // Tenta parsear JSON de erro e anexa status/dados ao Error
@@ -94,7 +95,9 @@ export const apiRequest = async (endpoint: string, options: RequestInit & { skip
         // ignore
       }
       if (process.env.NODE_ENV !== 'production') {
-        console.log('❌ Erro do servidor:', errorData, 'status:', response.status);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('❌ Erro do servidor - Status:', response.status);
+        }
       }
       const err: any = new Error(
         (errorData && (errorData.message || errorData.error)) ||
@@ -106,8 +109,8 @@ export const apiRequest = async (endpoint: string, options: RequestInit & { skip
     }
 
     const data = await response.json();
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('✅ Sucesso:', data);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('✅ Request concluído com sucesso');
     }
     return data;
   } catch (error) {

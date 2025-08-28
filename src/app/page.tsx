@@ -33,7 +33,9 @@ export default function Home() {
     const userData = localStorage.getItem('user');
     if (userData) {
       const user = JSON.parse(userData);
-      console.log('Usuário logado:', user);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Usuário logado detectado');
+      }
       
       // Verificar se precisa do telefone (vindo do Google OAuth)
       const needsPhone = searchParams.get('needsPhone');

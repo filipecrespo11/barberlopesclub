@@ -141,12 +141,14 @@ export default function CadastroModal({ isOpen, onClose, onSwitchToLogin }: Cada
       // Se retornar código de desenvolvimento, preencher automaticamente
       if (response.codigo_dev) {
         const codigo = response.codigo_dev;
-        console.log('🔐 Código de desenvolvimento recebido:', codigo);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('🔐 Código de desenvolvimento detectado');
+        }
         setCodigoVerificacao(codigo);
         
         // Mostrar mensagem específica para modo desenvolvimento
-        if (response.debug) {
-          console.log('ℹ️ Modo desenvolvimento:', response.debug);
+        if (response.debug && process.env.NODE_ENV === 'development') {
+          console.log('ℹ️ Modo desenvolvimento ativo');
         }
       }
       

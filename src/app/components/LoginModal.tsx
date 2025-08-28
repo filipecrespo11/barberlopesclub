@@ -104,24 +104,27 @@ export default function LoginModal({ isOpen, onClose, onSwitchToCadastro, onLogi
     setLoading(true);
     setErro("");
 
-    console.log('🔐 ========= INICIANDO LOGIN =========');
-    console.log('📧 Email:', formData.email);
-    console.log('🔑 Senha:', formData.password ? '***oculta***' : 'VAZIA!');
-    console.log('📊 Form Data completo:', { ...formData, password: '***oculta***' });
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔐 Iniciando processo de login...');
+    }
 
     try {      const loginData = {
         username: formData.email,
         password: formData.password
       };
       
-      console.log('📤 Enviando dados:', { ...loginData, password: '***oculta***' });
+      if (process.env.NODE_ENV === 'development') {
+        console.log('📤 Enviando dados de login...');
+      }
       
       const response = await apiRequest(API_CONFIG.endpoints.auth.login, {
         method: 'POST',
         body: JSON.stringify(loginData),
       });
 
-      console.log('✅ Login bem-sucedido!', response);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('✅ Login realizado com sucesso');
+      }
 
       // Login realizado com sucesso
       localStorage.setItem("user", JSON.stringify(response.usuario));

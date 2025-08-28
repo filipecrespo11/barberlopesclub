@@ -43,7 +43,10 @@ export default function GoogleCallback() {
         // Enviar código para o backend processar
         // Inclui redirectUri explícito, pois muitos backends exigem validação rígida
         const redirectUri = `${window.location.origin}/auth/google/callback`;
-        console.log('🔵 Enviando para backend:', { code: code?.substring(0, 20) + '...', state, redirect_uri: redirectUri });
+        // Log seguro - sem dados sensíveis
+        if (process.env.NODE_ENV === 'development') {
+          console.log('🔵 Iniciando autenticação Google...');
+        }
         let response: any;
         try {
           response = await apiRequest(API_CONFIG.endpoints.auth.googleCallback, {
@@ -52,9 +55,15 @@ export default function GoogleCallback() {
             body: JSON.stringify({ code, state, redirect_uri: redirectUri, redirectUri }),
             skipAuth: true,
           });
-          console.log('✅ Resposta do backend:', response);
+          // Log seguro - apenas status de sucesso
+          if (process.env.NODE_ENV === 'development') {
+            console.log('✅ Autenticação Google bem-sucedida');
+          }
         } catch (e: any) {
-          console.log('❌ Erro do backend:', e);
+          // Log apenas tipo de erro, sem dados sensíveis
+          if (process.env.NODE_ENV === 'development') {
+            console.log('⚠️ Tentando métodos alternativos de autenticação...');
+          }
           // Alguns backends esperam GET com query params; faz fallback automático
           const status = e?.status;
           if (status === 404 || status === 405) {

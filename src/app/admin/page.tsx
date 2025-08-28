@@ -80,10 +80,10 @@ function AdminLogin() {
       const token = res.token || res.data?.token;
       const claims = decodeJwtClaims(token);
       const adminOk = isUserAdmin(usuario) || isClaimsAdmin(claims);
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('👤 Usuario recebido do back:', usuario);
-        console.log('🔐 Claims decodificadas:', claims);
-        console.log('🔐 adminOk calculado:', adminOk);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('👤 Validação de admin concluída');
+        console.log('🔐 Permissões verificadas');
+        console.log('🔐 Status admin:', adminOk ? 'Autorizado' : 'Negado');
       }
   // Considera sucesso pelo status 200 (apiRequest já lança erro para não-200)
   if (usuario && adminOk) {
