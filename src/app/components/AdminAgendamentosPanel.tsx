@@ -170,8 +170,15 @@ export default function AdminAgendamentosPanel() {
     setIsModalOpen(true);
   }
 
-  // Gera slots de horário (30 em 30 min)
-  const generateSlots = (start = "08:00", end = "23:30", stepMin = 30) => {
+  // Listener para evento de novo agendamento vindo dos botões fixos
+  useEffect(() => {
+    const handleOpenNew = () => openNew();
+    window.addEventListener('openNewAgendamento', handleOpenNew);
+    return () => window.removeEventListener('openNewAgendamento', handleOpenNew);
+  }, []);
+
+  // Gera slots de horário (step em minutos)
+  const generateSlots = (start = "09:00", end = "20:00", stepMin = 60) => {
     const [sh, sm] = start.split(":").map(Number);
     const [eh, em] = end.split(":").map(Number);
     const startMin = sh * 60 + sm;
@@ -185,7 +192,7 @@ export default function AdminAgendamentosPanel() {
     return out;
   };
 
-  const allTimeSlots = useMemo(() => generateSlots("08:00", "23:30", 30), []);
+  const allTimeSlots = useMemo(() => generateSlots("09:00", "20:00", 60), []);
 
   // Lista de horários disponíveis conforme a data selecionada no modal
   const availableTimes = useMemo(() => {
@@ -254,42 +261,18 @@ export default function AdminAgendamentosPanel() {
   if (error) return <div className="p-8 text-center text-red-600">{error}</div>;
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-bold">Painel Administrativo - Agendamentos</h2>
-        <div className="flex items-center gap-2">
-          <button
-            className="px-4 py-2 border rounded hover:bg-gray-50"
-            onClick={() => {
-              if (confirm('Deseja sair da conta de administrador?')) {
-                try {
-                  localStorage.removeItem('user');
-                  localStorage.removeItem('token');
-                  localStorage.removeItem('authToken');
-                } catch {}
-                router.replace('/admin');
-              }
-            }}
-            title="Sair"
-          >
-            Sair
-          </button>
-          <button
-            className="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 font-bold"
-            onClick={openNew}
-          >
-            Novo Agendamento
-          </button>
-        </div>
+    <div className="p-4 md:p-8">
+      <div className="mb-4">
+        <h2 className="text-xl md:text-2xl font-bold">Painel Administrativo - Agendamentos</h2>
       </div>
 
       {/* Barra de filtros */}
-      <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-3">
-        <div className="col-span-1 md:col-span-2">
+      <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="col-span-1 sm:col-span-2 lg:col-span-2">
           <label className="block text-sm font-medium text-gray-700 mb-1">Buscar (nome ou telefone)</label>
           <input
             type="text"
-            className="w-full px-3 py-2 border rounded"
+            className="w-full px-3 py-2 border rounded text-sm"
             placeholder="Ex.: João ou 2299..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -299,7 +282,7 @@ export default function AdminAgendamentosPanel() {
           <label className="block text-sm font-medium text-gray-700 mb-1">Data inicial</label>
           <input
             type="date"
-            className="w-full px-3 py-2 border rounded"
+            className="w-full px-3 py-2 border rounded text-sm"
             value={dateStart}
             onChange={(e) => setDateStart(e.target.value)}
           />
@@ -309,13 +292,13 @@ export default function AdminAgendamentosPanel() {
           <div className="flex gap-2">
             <input
               type="date"
-              className="w-full px-3 py-2 border rounded"
+              className="flex-1 px-3 py-2 border rounded text-sm"
               value={dateEnd}
               onChange={(e) => setDateEnd(e.target.value)}
             />
             <button
               type="button"
-              className="px-3 py-2 border rounded hover:bg-gray-50"
+              className="px-2 py-2 border rounded hover:bg-gray-50 text-sm"
               onClick={clearFilters}
               title="Limpar filtros"
             >
@@ -324,7 +307,7 @@ export default function AdminAgendamentosPanel() {
           </div>
         </div>
       </div>
-      <div className="mb-3 flex items-center justify-between text-sm text-gray-600">
+      <div className="mb-3 flex flex-col sm:flex-row items-start sm:items-center justify-between text-sm text-gray-600 gap-2">
         <span>
           Exibindo {filteredAgendamentos.length === 0 ? 0 : startIndex + 1}
           -{Math.min(endIndex, filteredAgendamentos.length)} de {filteredAgendamentos.length}
@@ -332,16 +315,16 @@ export default function AdminAgendamentosPanel() {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            className="px-3 py-1 border rounded disabled:opacity-50"
+            className="px-2 py-1 text-sm border rounded disabled:opacity-50"
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={pageClamped <= 1}
           >
             Anterior
           </button>
-          <span>Página {pageClamped} / {totalPages}</span>
+          <span className="text-xs sm:text-sm">Página {pageClamped} / {totalPages}</span>
           <button
             type="button"
-            className="px-3 py-1 border rounded disabled:opacity-50"
+            className="px-2 py-1 text-sm border rounded disabled:opacity-50"
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={pageClamped >= totalPages}
           >
@@ -349,60 +332,98 @@ export default function AdminAgendamentosPanel() {
           </button>
         </div>
       </div>
-      <table className="min-w-full bg-white border rounded-lg overflow-hidden">
-        <thead>
-          <tr className="bg-gray-100">
-            <th className="py-2 px-4 border-b">Nome</th>
-            <th className="py-2 px-4 border-b">Telefone</th>
-            <th className="py-2 px-4 border-b">Serviço</th>
-            <th className="py-2 px-4 border-b">Data</th>
-            <th className="py-2 px-4 border-b">Horário</th>
-            <th className="py-2 px-4 border-b">Ações</th>
-          </tr>
-        </thead>
-        <tbody>
+
+      {/* Layout responsivo: Cards em mobile, tabela em desktop */}
+      <div className="block md:hidden">
+        {/* Cards para mobile */}
+        <div className="space-y-3">
           {filteredAgendamentos.length === 0 ? (
-            <tr>
-              <td colSpan={6} className="py-4 text-center text-gray-500">Nenhum agendamento encontrado com os filtros atuais.</td>
-            </tr>
+            <div className="bg-white p-4 rounded border text-center text-gray-500 text-sm">
+              Nenhum agendamento encontrado com os filtros atuais.
+            </div>
           ) : (
             pagedAgendamentos.map((ag, idx) => (
-              <tr key={(ag as any)?.id ?? (ag as any)?._id ?? idx} className="border-b hover:bg-gray-50">
-                <td className="py-2 px-4">{ag.nome}</td>
-                <td className="py-2 px-4">{ag.telefone}</td>
-                <td className="py-2 px-4">{ag.servico}</td>
-                <td className="py-2 px-4">{ag.data}</td>
-                <td className="py-2 px-4">{ag.horario || ag.hora}</td>
-                <td className="py-2 px-4">
-                  <div className="flex items-center gap-2">
-                    <button className="px-3 py-1 text-sm bg-yellow-500 text-black rounded hover:bg-yellow-600 font-semibold" onClick={() => openEdit(ag)}>Editar</button>
-                    <button className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700 font-semibold" onClick={() => handleDelete(ag)}>Excluir</button>
+              <div key={(ag as any)?.id ?? (ag as any)?._id ?? idx} className="bg-white p-4 rounded border shadow-sm">
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <h3 className="font-semibold text-sm">{ag.nome}</h3>
+                    <p className="text-xs text-gray-600">{ag.telefone}</p>
                   </div>
-                </td>
-              </tr>
+                  <div className="text-right">
+                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">{ag.servico}</span>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center text-xs text-gray-600 mb-3">
+                  <span>{ag.data}</span>
+                  <span className="font-medium">{ag.horario || ag.hora}</span>
+                </div>
+                <div className="flex gap-2">
+                  <button className="flex-1 px-3 py-2 text-xs bg-yellow-500 text-black rounded hover:bg-yellow-600 font-semibold" onClick={() => openEdit(ag)}>Editar</button>
+                  <button className="flex-1 px-3 py-2 text-xs bg-red-600 text-white rounded hover:bg-red-700 font-semibold" onClick={() => handleDelete(ag)}>Excluir</button>
+                </div>
+              </div>
             ))
           )}
-        </tbody>
-      </table>
+        </div>
+      </div>
+
+      {/* Tabela para desktop */}
+      <div className="hidden md:block">
+        <table className="w-full bg-white border rounded-lg overflow-hidden">
+          <thead>
+            <tr className="bg-gray-100">
+              <th className="py-3 px-4 border-b text-sm text-left">Nome</th>
+              <th className="py-3 px-4 border-b text-sm text-left">Telefone</th>
+              <th className="py-3 px-4 border-b text-sm text-left">Serviço</th>
+              <th className="py-3 px-4 border-b text-sm text-left">Data</th>
+              <th className="py-3 px-4 border-b text-sm text-left">Horário</th>
+              <th className="py-3 px-4 border-b text-sm text-center">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredAgendamentos.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="py-4 text-center text-gray-500 text-sm">Nenhum agendamento encontrado com os filtros atuais.</td>
+              </tr>
+            ) : (
+              pagedAgendamentos.map((ag, idx) => (
+                <tr key={(ag as any)?.id ?? (ag as any)?._id ?? idx} className="border-b hover:bg-gray-50">
+                  <td className="py-3 px-4 text-sm">{ag.nome}</td>
+                  <td className="py-3 px-4 text-sm">{ag.telefone}</td>
+                  <td className="py-3 px-4 text-sm">{ag.servico}</td>
+                  <td className="py-3 px-4 text-sm">{ag.data}</td>
+                  <td className="py-3 px-4 text-sm">{ag.horario || ag.hora}</td>
+                  <td className="py-3 px-4 text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <button className="px-3 py-1 text-sm bg-yellow-500 text-black rounded hover:bg-yellow-600 font-semibold" onClick={() => openEdit(ag)}>Editar</button>
+                      <button className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700 font-semibold" onClick={() => handleDelete(ag)}>Excluir</button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-md w-full">
-            <div className="flex items-center justify-between p-6 border-b">
-              <h3 className="text-xl font-bold">{editItem?.id ? 'Editar Agendamento' : 'Novo Agendamento'}</h3>
-              <button className="text-gray-500 hover:text-gray-700" onClick={() => { setIsModalOpen(false); setEditItem(null); }}>✕</button>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-2 md:p-4">
+          <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-4 md:p-6 border-b">
+              <h3 className="text-lg md:text-xl font-bold">{editItem?.id ? 'Editar Agendamento' : 'Novo Agendamento'}</h3>
+              <button className="text-gray-500 hover:text-gray-700 text-xl" onClick={() => { setIsModalOpen(false); setEditItem(null); }}>✕</button>
             </div>
-            <div className="p-6 space-y-4">
+            <div className="p-4 md:p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Nome</label>
-                <input className="w-full px-3 py-2 border rounded" value={editItem?.nome || ''} onChange={(e) => setEditItem(prev => prev ? { ...prev, nome: e.target.value } : prev)} />
+                <input className="w-full px-3 py-2 border rounded text-sm" value={editItem?.nome || ''} onChange={(e) => setEditItem((prev: AgendamentoData | null) => prev ? { ...prev, nome: e.target.value } : prev)} />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Telefone</label>
-                <input className="w-full px-3 py-2 border rounded" value={editItem?.telefone || ''} onChange={(e) => setEditItem(prev => prev ? { ...prev, telefone: e.target.value } : prev)} />
+                <input className="w-full px-3 py-2 border rounded text-sm" value={editItem?.telefone || ''} onChange={(e) => setEditItem((prev: AgendamentoData | null) => prev ? { ...prev, telefone: e.target.value } : prev)} />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Serviço</label>
-                <select className="w-full px-3 py-2 border rounded" value={editItem?.servico || ''} onChange={(e) => setEditItem(prev => prev ? { ...prev, servico: e.target.value } : prev)}>
+                <select className="w-full px-3 py-2 border rounded text-sm" value={editItem?.servico || ''} onChange={(e) => setEditItem((prev: AgendamentoData | null) => prev ? { ...prev, servico: e.target.value } : prev)}>
                   <option value="">Selecione</option>
                   {servicos.map(s => (
                     <option key={s.id} value={s.id}>{s.nome}</option>
@@ -411,14 +432,14 @@ export default function AdminAgendamentosPanel() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Data</label>
-                <input type="date" className="w-full px-3 py-2 border rounded" value={editItem?.data || ''} onChange={(e) => setEditItem(prev => prev ? { ...prev, data: e.target.value } : prev)} />
+                <input type="date" className="w-full px-3 py-2 border rounded text-sm" value={editItem?.data || ''} onChange={(e) => setEditItem((prev: AgendamentoData | null) => prev ? { ...prev, data: e.target.value } : prev)} />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Horário</label>
                 <select
-                  className="w-full px-3 py-2 border rounded"
+                  className="w-full px-3 py-2 border rounded text-sm"
                   value={editItem?.horario || ''}
-                  onChange={(e) => setEditItem(prev => prev ? { ...prev, horario: e.target.value } : prev)}
+                  onChange={(e) => setEditItem((prev: AgendamentoData | null) => prev ? { ...prev, horario: e.target.value } : prev)}
                   disabled={!editItem?.data}
                 >
                   <option value="">{editItem?.data ? 'Selecione um horário' : 'Selecione a data primeiro'}</option>
@@ -428,8 +449,8 @@ export default function AdminAgendamentosPanel() {
                 </select>
               </div>
               <div className="flex gap-3 pt-2">
-                <button className="flex-1 px-4 py-2 border rounded" onClick={() => { setIsModalOpen(false); setEditItem(null); }}>Cancelar</button>
-                <button className="flex-1 px-4 py-2 bg-blue-600 text-white rounded" onClick={() => editItem && handleSave(editItem)}>Salvar</button>
+                <button className="flex-1 px-4 py-2 border rounded text-sm" onClick={() => { setIsModalOpen(false); setEditItem(null); }}>Cancelar</button>
+                <button className="flex-1 px-4 py-2 bg-blue-600 text-white rounded text-sm" onClick={() => editItem && handleSave(editItem)}>Salvar</button>
               </div>
             </div>
           </div>

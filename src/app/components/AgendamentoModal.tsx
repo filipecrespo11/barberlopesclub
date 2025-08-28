@@ -44,11 +44,22 @@ export default function AgendamentoModal({ isOpen, onClose, onLoginRequired }: A
     { id: 'pezinho', nome: 'Pezinho', preco: 'R$ 10,00' }
   ];
 
-  const horarios = useMemo(() => [
-    '09:00', '10:00', '11:00',
-    '14:00', '15:00', '16:00',
-    '17:00', '18:00', '19:00'
-  ], []);
+  // Gera slots de horário (step em minutos)
+  const generateSlots = (start = "09:00", end = "20:00", stepMin = 60) => {
+    const [sh, sm] = start.split(":").map(Number);
+    const [eh, em] = end.split(":").map(Number);
+    const startMin = sh * 60 + sm;
+    const endMin = eh * 60 + em;
+    const out: string[] = [];
+    for (let m = startMin; m <= endMin; m += stepMin) {
+      const hh = String(Math.floor(m / 60)).padStart(2, "0");
+      const mm = String(m % 60).padStart(2, "0");
+      out.push(`${hh}:${mm}`);
+    }
+    return out;
+  };
+
+  const horarios = useMemo(() => generateSlots("09:00", "20:00", 60), []);
 
   const [horariosDisponiveis, setHorariosDisponiveis] = useState<string[]>(horarios);
 

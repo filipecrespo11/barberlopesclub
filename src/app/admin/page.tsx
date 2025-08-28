@@ -235,12 +235,40 @@ export default function AdminPage() {
     <>
       <div className="flex justify-end p-12"></div>
       <div className="fixed top-4 right-4 z-[9999]">
-        <button
-          className="bg-yellow-500 text-black px-4 py-2 rounded shadow hover:bg-yellow-600 font-bold"
-          onClick={() => router.push("/admin/criar-admin")}
-        >
-          Criar Novo Admin
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            className="px-3 py-2 text-sm border rounded hover:bg-gray-50"
+            onClick={() => {
+              if (confirm('Deseja sair da conta de administrador?')) {
+                try {
+                  localStorage.removeItem('user');
+                  localStorage.removeItem('token');
+                  localStorage.removeItem('authToken');
+                } catch {}
+                window.location.reload();
+              }
+            }}
+            title="Sair"
+          >
+            Sair
+          </button>
+          <button
+            className="bg-blue-600 text-white px-3 py-2 text-sm rounded shadow hover:bg-blue-700 font-bold"
+            onClick={() => {
+              // Encontrar o painel e chamar a função openNew
+              const event = new CustomEvent('openNewAgendamento');
+              window.dispatchEvent(event);
+            }}
+          >
+            Novo Agendamento
+          </button>
+          <button
+            className="bg-yellow-500 text-black px-3 py-2 text-sm rounded shadow hover:bg-yellow-600 font-bold"
+            onClick={() => router.push("/admin/criar-admin")}
+          >
+            Criar Novo Admin
+          </button>
+        </div>
       </div>
       <AdminAgendamentosPanel />
     </>
