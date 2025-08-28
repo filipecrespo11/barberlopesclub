@@ -80,18 +80,38 @@ export default function GoogleCallback() {
         // Considera sucesso se vier token e usuário, mesmo sem flag 'success'
         const user = response.user || response.usuario || response.data?.usuario || response.data?.user;
         const token = response.token || response.data?.token;
+        const isNewUser = response.isNewUser || response.is_new_user || !user?.tel;
         const ok = !!token && !!user;
+        
         if (ok) {
           localStorage.setItem('user', JSON.stringify(user));
           localStorage.setItem('token', token);
-          setStatus('success');
-          setMessage('Login realizado com sucesso! Redirecionando...');
-          // Comunica sucesso para opener
-          if (window.opener) {
-            window.opener.postMessage({ type: 'google-auth-success', user, token }, window.location.origin);
-            window.close();
+          
+          // Se é usuário novo do Google sem telefone, pedir telefone
+          if (isNewUser || !user.tel) {
+            setStatus('success');
+            setMessage('Login realizado! Precisamos do seu telefone para contato.');
+            // Comunica sucesso mas com necessidade de telefone
+            if (window.opener) {
+              window.opener.postMessage({ 
+                type: 'google-auth-success', 
+                user, 
+                token, 
+                needsPhone: true 
+              }, window.location.origin);
+              window.close();
+            }
+            setTimeout(() => router.push('/?needsPhone=true'), 2000);
+          } else {
+            setStatus('success');
+            setMessage('Login realizado com sucesso! Redirecionando...');
+            // Comunica sucesso normal
+            if (window.opener) {
+              window.opener.postMessage({ type: 'google-auth-success', user, token }, window.location.origin);
+              window.close();
+            }
+            setTimeout(() => router.push('/'), 2000);
           }
-          setTimeout(() => router.push('/'), 2000);
         } else {
           setStatus('error');
           setMessage(response.message || 'Erro na autenticação');

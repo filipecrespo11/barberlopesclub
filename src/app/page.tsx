@@ -1,16 +1,20 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import AgendamentoModal from "./components/AgendamentoModal";
 import LoginModal from "./components/LoginModal";
 import CadastroModal from "./components/CadastroModal";
+import PhoneModal from "./components/PhoneModal";
 
 import type { User } from "./types";
 
 export default function Home() {
+  const searchParams = useSearchParams();
   const [isAgendamentoModalOpen, setIsAgendamentoModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isCadastroModalOpen, setIsCadastroModalOpen] = useState(false);
+  const [isPhoneModalOpen, setIsPhoneModalOpen] = useState(false);
 
   // Adiciona botão para painel admin (apenas para admin logado)
   const [showAdminPanel, setShowAdminPanel] = useState(false);
@@ -28,8 +32,14 @@ export default function Home() {
     // Verificar se o usuário está logado
     const userData = localStorage.getItem('user');
     if (userData) {
-      // Usuário está logado, mas não precisamos armazenar no estado aqui
-      console.log('Usuário logado:', JSON.parse(userData));
+      const user = JSON.parse(userData);
+      console.log('Usuário logado:', user);
+      
+      // Verificar se precisa do telefone (vindo do Google OAuth)
+      const needsPhone = searchParams.get('needsPhone');
+      if (needsPhone === 'true' && (!user.tel && !user.telefone)) {
+        setIsPhoneModalOpen(true);
+      }
     }
 
     // Listener para abrir modal de login
@@ -37,9 +47,28 @@ export default function Home() {
       setIsLoginModalOpen(true);
     };
 
+    // Listener para mensagens do Google OAuth
+    const handleMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+      
+      if (event.data.type === 'google-auth-success') {
+        if (event.data.needsPhone) {
+          // Usuário novo do Google, pedir telefone
+          setIsPhoneModalOpen(true);
+        }
+        // Fechar modal de login se estiver aberto
+        setIsLoginModalOpen(false);
+      }
+    };
+
     window.addEventListener('openLoginModal', handleOpenLoginModal);
-    return () => window.removeEventListener('openLoginModal', handleOpenLoginModal);
-  }, []);
+    window.addEventListener('message', handleMessage);
+    
+    return () => {
+      window.removeEventListener('openLoginModal', handleOpenLoginModal);
+      window.removeEventListener('message', handleMessage);
+    };
+  }, [searchParams]);
 
   const openAgendamentoModal = () => setIsAgendamentoModalOpen(true);
   const closeAgendamentoModal = () => setIsAgendamentoModalOpen(false);
@@ -47,6 +76,24 @@ export default function Home() {
   const closeLoginModal = () => setIsLoginModalOpen(false);
   
   const closeCadastroModal = () => setIsCadastroModalOpen(false);
+
+  const closePhoneModal = () => {
+    setIsPhoneModalOpen(false);
+    // Remover parâmetro da URL
+    const url = new URL(window.location.href);
+    url.searchParams.delete('needsPhone');
+    window.history.replaceState({}, '', url.toString());
+  };
+
+  const onPhoneSuccess = () => {
+    setIsPhoneModalOpen(false);
+    // Remover parâmetro da URL
+    const url = new URL(window.location.href);
+    url.searchParams.delete('needsPhone');
+    window.history.replaceState({}, '', url.toString());
+    // Refresh da página para atualizar estado
+    window.location.reload();
+  };
 
   const switchToCadastro = () => {
     setIsLoginModalOpen(false);
@@ -424,6 +471,11 @@ export default function Home() {
       isOpen={isCadastroModalOpen} 
       onClose={closeCadastroModal}
       onSwitchToLogin={switchToLogin}
+    />
+    <PhoneModal
+      isOpen={isPhoneModalOpen}
+      onClose={closePhoneModal}
+      onSuccess={onPhoneSuccess}
     />
       {showAdminPanel && (
         <div className="fixed top-4 right-4 z-[9999]">
