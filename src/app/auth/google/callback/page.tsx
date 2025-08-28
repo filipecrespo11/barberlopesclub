@@ -42,16 +42,19 @@ export default function GoogleCallback() {
 
         // Enviar código para o backend processar
         // Inclui redirectUri explícito, pois muitos backends exigem validação rígida
-    const redirectUri = `${window.location.origin}/auth/google/callback`;
+        const redirectUri = `${window.location.origin}/auth/google/callback`;
+        console.log('🔵 Enviando para backend:', { code: code?.substring(0, 20) + '...', state, redirect_uri: redirectUri });
         let response: any;
         try {
           response = await apiRequest(API_CONFIG.endpoints.auth.googleCallback, {
             method: 'POST',
-      // Alguns backends esperam "redirect_uri" (snake_case)
+            // Alguns backends esperam "redirect_uri" (snake_case)
             body: JSON.stringify({ code, state, redirect_uri: redirectUri, redirectUri }),
             skipAuth: true,
           });
+          console.log('✅ Resposta do backend:', response);
         } catch (e: any) {
+          console.log('❌ Erro do backend:', e);
           // Alguns backends esperam GET com query params; faz fallback automático
           const status = e?.status;
           if (status === 404 || status === 405) {
