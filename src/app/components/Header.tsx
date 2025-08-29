@@ -7,8 +7,6 @@ import Image from "next/image";
 
 export default function Header() {
   const pathname = usePathname();
-  // esconder header em rotas /admin
-  if (pathname && pathname.startsWith('/admin')) return null;
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -20,6 +18,9 @@ export default function Header() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // esconder header em rotas /admin (hooks must be called before this early return)
+  if (pathname && pathname.startsWith('/admin')) return null;
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-30 ${
       isScrolled 
