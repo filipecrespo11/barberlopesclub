@@ -186,6 +186,22 @@ export default function AdminPage() {
     if (hasAdminSignal(u)) return true;
     return false;
   };
+  useEffect(() => {
+    // Esconder header e footer na página admin
+    
+    const header = document.querySelector('header');
+    
+
+    if (header) header.style.display = 'none';
+   
+    
+    return () => {
+      // Restaurar quando sair da página
+      document.body.style.overflow = 'auto';
+      if (header) header.style.display = 'flex';
+
+    };
+  }, []);
 
   useEffect(() => {
     function checkAdmin() {
@@ -233,8 +249,11 @@ export default function AdminPage() {
   if (!checked) return null;
   return autenticado ? (
     <>
+  
       <div className="flex justify-end p-12"></div>
+      
       <div className="fixed top-4 right-4 z-[9999]">
+        
         <div className="flex items-center gap-2">
           <button
             className="px-3 py-2 text-sm border rounded hover:bg-gray-50"
