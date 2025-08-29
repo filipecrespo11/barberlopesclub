@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import AgendamentoModal from "./components/AgendamentoModal";
@@ -9,7 +9,7 @@ import PhoneModal from "./components/PhoneModal";
 
 import type { User } from "./types";
 
-export default function Home() {
+function HomeContent() {
   const searchParams = useSearchParams();
   const [isAgendamentoModalOpen, setIsAgendamentoModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -36,7 +36,7 @@ export default function Home() {
       if (process.env.NODE_ENV === 'development') {
         console.log('Usuário logado detectado');
       }
-      
+
       // Verificar se precisa do telefone (vindo do Google OAuth)
       const needsPhone = searchParams.get('needsPhone');
       if (needsPhone === 'true' && (!user.tel && !user.telefone)) {
@@ -490,5 +490,22 @@ export default function Home() {
         </div>
       )}
   </>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Carregando...</p>
+          </div>
+        </div>
+      </div>
+    }>
+      <HomeContent />
+    </Suspense>
   );
 }

@@ -1,9 +1,9 @@
 "use client";
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { apiRequest, API_CONFIG } from '@/app/utils/api';
 
-export default function GoogleCallback() {
+function GoogleCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
@@ -154,7 +154,7 @@ export default function GoogleCallback() {
           {status === 'loading' && (
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
           )}
-          
+
           {status === 'success' && (
             <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -162,7 +162,7 @@ export default function GoogleCallback() {
               </svg>
             </div>
           )}
-          
+
           {status === 'error' && (
             <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -170,17 +170,17 @@ export default function GoogleCallback() {
               </svg>
             </div>
           )}
-          
+
           <h2 className="text-xl font-semibold text-gray-900 mb-2">
             {status === 'loading' && 'Processando...'}
             {status === 'success' && 'Sucesso!'}
             {status === 'error' && 'Erro'}
           </h2>
-          
+
           <p className="text-gray-600">
             {message}
           </p>
-          
+
           {status === 'error' && (
             <button
               onClick={() => router.push('/')}
@@ -192,5 +192,23 @@ export default function GoogleCallback() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function GoogleCallback() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="max-w-md w-full bg-white rounded-lg shadow-md p-6">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">Carregando...</h2>
+            <p className="text-gray-600">Processando autenticação...</p>
+          </div>
+        </div>
+      </div>
+    }>
+      <GoogleCallbackContent />
+    </Suspense>
   );
 }
