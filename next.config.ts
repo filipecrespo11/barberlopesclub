@@ -1,8 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  output: 'export',
+  trailingSlash: true,
   images: {
+    unoptimized: true, // necessário para export estático
     remotePatterns: [
       { protocol: 'http', hostname: '**' },
       { protocol: 'https', hostname: '**' },

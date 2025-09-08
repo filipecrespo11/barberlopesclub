@@ -1,22 +1,27 @@
-// Configuração da API
+// Configuração da API para conectar com o backend externo
 export const API_CONFIG = {
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'https://backbarbearialopez.onrender.com',
-  endpoints: {    auth: {
-      login: '/auterota/login',
-      cadastro: '/auterota/iniciar-cadastro',
-      verificarCodigo: '/auterota/verificar-codigo',
-      googleConfig: '/auterota/google-config',
-      googleCallback: '/auterota/auth/google/callback',
+  endpoints: {    
+    auth: {
+      login: '/login',
+      cadastro: '/iniciar-cadastro',
+      verificarCodigo: '/verificar-codigo',
+      googleConfig: '/google-config',
+      googleCallback: '/auth/google/callback',
+      atualizarTelefone: '/atualizar-telefone'
     },
     agendamentos: {
-      criar: '/auterota/agendar',
-      listar: '/auterota/agendamentos',
-      atualizar: (id: string | number) => `/auterota/agendar/${id}`,
-      remover: (id: string | number) => `/auterota/agendar/${id}`,
+      criar: '/agendar',
+      listar: '/agendamentos',
+      atualizar: (id: string | number) => `/agendar/${id}`,
+      remover: (id: string | number) => `/agendar/${id}`,
     },
     usuarios: {
-      listar: '/auterota/usuarios',
-      criar: '/auterota/criausuarios',
+      listar: '/usuarios',
+      criar: '/criausuarios',
+    },
+    admin: {
+      criarAdmin: '/criar-admin',
     }
   }
 };
@@ -41,12 +46,12 @@ export const apiRequest = async (endpoint: string, options: RequestInit & { skip
     ...options,
   };
   // Adicionar token apenas se não for login, cadastro ou endpoints do Google OAuth
-  const isAuthEndpoint = endpoint.includes('/auterota/login') || 
-                         endpoint.includes('/auterota/cadastro') || 
-                         endpoint.includes('/auterota/iniciar-cadastro') || 
-                         endpoint.includes('/auterota/verificar-codigo') ||
-                         endpoint.includes('/auterota/google-config') ||
-                         endpoint.includes('/auterota/auth/google/callback');
+  const isAuthEndpoint = endpoint.includes('/login') || 
+                         endpoint.includes('/cadastro') || 
+                         endpoint.includes('/iniciar-cadastro') || 
+                         endpoint.includes('/verificar-codigo') ||
+                         endpoint.includes('/google-config') ||
+                         endpoint.includes('/auth/google/callback');
   const skipAuth = (options as any).skipAuth === true;
   if (!isAuthEndpoint && !skipAuth) {
     let token: string | null = null;
