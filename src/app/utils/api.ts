@@ -28,15 +28,8 @@ export const API_CONFIG = {
 
 // Função utilitária para fazer chamadas para a API
 export const apiRequest = async (endpoint: string, options: RequestInit & { skipAuth?: boolean } = {}) => {
-  // Detecta rotas internas do Next (/api/...) e URLs absolutas
-  let url: string;
-  if (/^https?:\/\//i.test(endpoint)) {
-    url = endpoint; // URL absoluta
-  } else if (endpoint.startsWith('/api/')) {
-    url = endpoint; // Rota interna do Next (mesma origem)
-  } else {
-    url = `${API_CONFIG.baseURL}${endpoint}`; // Endpoint do backend
-  }
+  // Para este projeto, sempre usar o backend externo
+  const url = `${API_CONFIG.baseURL}${endpoint}`;
   
   const defaultOptions: RequestInit = {
     headers: {
@@ -61,7 +54,7 @@ export const apiRequest = async (endpoint: string, options: RequestInit & { skip
     }
     // Optionally pick from cookies on server-side calls (when used in RSC, though apiRequest is client-first)
     if (token) {
-      if (process.env.NODE_ENV === 'development') {
+      if (process.env.NODE_ENV !== 'production') {
         console.log('🔑 Fazendo request autenticado...');
         console.log('🔑 Endpoint sendo chamado:', endpoint);
       }
@@ -79,31 +72,32 @@ export const apiRequest = async (endpoint: string, options: RequestInit & { skip
     }
   }
   try {
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV !== 'production') {
       console.log('🚀 Fazendo requisição para:', url);
       console.log('📝 Método:', defaultOptions.method || 'GET');
     }
     
     const response = await fetch(url, defaultOptions);
     
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV !== 'production') {
       console.log('📥 Status da resposta:', response.status);
-    }
-    if (process.env.NODE_ENV === 'development') {
-      console.log('📥 Headers recebidos');
+      console.log('📥 Headers:', Object.fromEntries(response.headers.entries()));
     }
     if (!response.ok) {
       // Tenta parsear JSON de erro e anexa status/dados ao Error
       let errorData: any = null;
       try {
-        errorData = await response.json();
+        const text = await response.text();
+        if (text) {
+          errorData = JSON.parse(text);
+        }
       } catch {
-        // ignore
+        // Se não conseguir parsear, use o texto como mensagem
+        errorData = { message: `Erro ${response.status}: ${response.statusText}` };
       }
       if (process.env.NODE_ENV !== 'production') {
-        if (process.env.NODE_ENV === 'development') {
-          console.log('❌ Erro do servidor - Status:', response.status);
-        }
+        console.log('❌ Erro do servidor - Status:', response.status);
+        console.log('❌ Dados do erro:', errorData);
       }
       const err: any = new Error(
         (errorData && (errorData.message || errorData.error)) ||
@@ -114,11 +108,26 @@ export const apiRequest = async (endpoint: string, options: RequestInit & { skip
       throw err;
     }
 
-    const data = await response.json();
-    if (process.env.NODE_ENV === 'development') {
-      console.log('✅ Request concluído com sucesso');
+    // Tenta parsear a resposta como JSON
+    const text = await response.text();
+    if (!text || text.trim() === '') {
+      return {}; // Retorna objeto vazio se resposta vazia
     }
-    return data;
+    
+    try {
+      const data = JSON.parse(text);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('✅ Request concluído com sucesso');
+        console.log('✅ Dados recebidos:', data);
+      }
+      return data;
+    } catch (jsonError) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('❌ Erro ao parsear JSON:', jsonError);
+        console.error('❌ Resposta recebida:', text);
+      }
+      throw new Error('Resposta do servidor não é um JSON válido');
+    }
   } catch (error) {
     // Se for erro de rede (servidor não está rodando)
     if (error instanceof TypeError && error.message.includes('fetch')) {
