@@ -46,12 +46,12 @@ export const apiRequest = async (endpoint: string, options: RequestInit & { skip
     ...options,
   };
   // Adicionar token apenas se não for login, cadastro ou endpoints do Google OAuth
-  const isAuthEndpoint = endpoint.includes('/login') || 
-                         endpoint.includes('/cadastro') || 
-                         endpoint.includes('/iniciar-cadastro') || 
-                         endpoint.includes('/verificar-codigo') ||
-                         endpoint.includes('/google-config') ||
-                         endpoint.includes('/auth/google/callback');
+  const isAuthEndpoint = endpoint.includes('/auterota/login') || 
+                         endpoint.includes('/auterota/cadastro') || 
+                         endpoint.includes('/auterota/iniciar-cadastro') || 
+                         endpoint.includes('/auterota/verificar-codigo') ||
+                         endpoint.includes('/auterota/google-config') ||
+                         endpoint.includes('/auterota/auth/google/callback');
   const skipAuth = (options as any).skipAuth === true;
   if (!isAuthEndpoint && !skipAuth) {
     let token: string | null = null;
