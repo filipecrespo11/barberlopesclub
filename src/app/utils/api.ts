@@ -3,25 +3,25 @@ export const API_CONFIG = {
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'https://backbarbearialopez-r4bg.onrender.com',
   endpoints: {    
     auth: {
-      login: '/login',
-      cadastro: '/iniciar-cadastro',
-      verificarCodigo: '/verificar-codigo',
-      googleConfig: '/google-config',
-      googleCallback: '/auth/google/callback',
-      atualizarTelefone: '/atualizar-telefone'
+      login: '/api/login',
+      cadastro: '/api/iniciar-cadastro',
+      verificarCodigo: '/api/verificar-codigo',
+      googleConfig: '/api/google-config',
+      googleCallback: '/api/auth/google/callback',
+      atualizarTelefone: '/api/atualizar-telefone'
     },
     agendamentos: {
-      criar: '/agendar',
-      listar: '/agendamentos',
-      atualizar: (id: string | number) => `/agendar/${id}`,
-      remover: (id: string | number) => `/agendar/${id}`,
+      criar: '/api/agendar',
+      listar: '/api/agendamentos',
+      atualizar: (id: string | number) => `/api/agendar/${id}`,
+      remover: (id: string | number) => `/api/agendar/${id}`,
     },
     usuarios: {
-      listar: '/usuarios',
-      criar: '/criausuarios',
+      listar: '/api/usuarios',
+      criar: '/api/criausuarios',
     },
     admin: {
-      criarAdmin: '/criar-admin',
+      criarAdmin: '/api/criar-admin',
     }
   }
 };
@@ -46,13 +46,13 @@ export const apiRequest = async (endpoint: string, options: RequestInit & { skip
     ...options,
   };
   // Adicionar token apenas se não for login, cadastro ou endpoints do Google OAuth
-  const isAuthEndpoint = endpoint.includes('/login') || 
-                         endpoint.includes('/cadastro') || 
-                         endpoint.includes('/iniciar-cadastro') || 
-                         endpoint.includes('/verificar-codigo') ||
-                         endpoint.includes('/google-config') ||
-                         endpoint.includes('/auth/google/callback') ||
-                         endpoint.includes('/agendamentos'); // Rota pública conforme backend
+  const isAuthEndpoint = endpoint.includes('/api/login') || 
+                         endpoint.includes('/api/cadastro') || 
+                         endpoint.includes('/api/iniciar-cadastro') || 
+                         endpoint.includes('/api/verificar-codigo') ||
+                         endpoint.includes('/api/google-config') ||
+                         endpoint.includes('/api/auth/google/callback') ||
+                         endpoint.includes('/api/agendamentos'); // Rota pública conforme backend
   const skipAuth = (options as any).skipAuth === true;
   if (!isAuthEndpoint && !skipAuth) {
     let token: string | null = null;
