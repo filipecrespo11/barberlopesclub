@@ -1,6 +1,6 @@
 // Configuração da API para conectar com o backend externo
 export const API_CONFIG = {
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'https://backbarbearialopez.onrender.com',
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'https://backbarbearialopez-r4bg.onrender.com',
   endpoints: {    
     auth: {
       login: '/login',
