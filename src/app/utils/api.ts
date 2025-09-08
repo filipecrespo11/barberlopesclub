@@ -3,25 +3,25 @@ export const API_CONFIG = {
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'https://backbarbearialopez.onrender.com',
   endpoints: {    
     auth: {
-      login: '/login',
-      cadastro: '/iniciar-cadastro',
-      verificarCodigo: '/verificar-codigo',
-      googleConfig: '/google-config',
-      googleCallback: '/auth/google/callback',
-      atualizarTelefone: '/atualizar-telefone'
+      login: '/auterota/login',
+      cadastro: '/auterota/iniciar-cadastro',
+      verificarCodigo: '/auterota/verificar-codigo',
+      googleConfig: '/auterota/google-config',
+      googleCallback: '/auterota/auth/google/callback',
+      atualizarTelefone: '/auterota/atualizar-telefone'
     },
     agendamentos: {
-      criar: '/agendar',
-      listar: '/agendamentos',
-      atualizar: (id: string | number) => `/agendar/${id}`,
-      remover: (id: string | number) => `/agendar/${id}`,
+      criar: '/auterota/agendar',
+      listar: '/auterota/agendamentos',
+      atualizar: (id: string | number) => `/auterota/agendar/${id}`,
+      remover: (id: string | number) => `/auterota/agendar/${id}`,
     },
     usuarios: {
-      listar: '/usuarios',
-      criar: '/criausuarios',
+      listar: '/auterota/usuarios',
+      criar: '/auterota/criar-usuarios',
     },
     admin: {
-      criarAdmin: '/criar-admin',
+      criarAdmin: '/auterota/criar-admin',
     }
   }
 };
