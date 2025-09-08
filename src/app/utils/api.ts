@@ -18,7 +18,7 @@ export const API_CONFIG = {
     },
     usuarios: {
       listar: '/usuarios',
-      criar: '/criar-usuarios',
+      criar: '/criausuarios',
     },
     admin: {
       criarAdmin: '/criar-admin',
@@ -51,7 +51,8 @@ export const apiRequest = async (endpoint: string, options: RequestInit & { skip
                          endpoint.includes('/iniciar-cadastro') || 
                          endpoint.includes('/verificar-codigo') ||
                          endpoint.includes('/google-config') ||
-                         endpoint.includes('/auth/google/callback');
+                         endpoint.includes('/auth/google/callback') ||
+                         endpoint.includes('/agendamentos'); // Rota pública conforme backend
   const skipAuth = (options as any).skipAuth === true;
   if (!isAuthEndpoint && !skipAuth) {
     let token: string | null = null;
@@ -123,6 +124,195 @@ export const apiRequest = async (endpoint: string, options: RequestInit & { skip
     if (error instanceof TypeError && error.message.includes('fetch')) {
       throw new Error('Não foi possível conectar com o servidor. Verifique se o backend está rodando.');
     }
+    throw error;
+  }
+};
+
+// ========== FUNÇÕES ESPECÍFICAS PARA CADA ENDPOINT ==========
+
+// Função para login
+export const login = async (credentials: { username: string; password: string }) => {
+  try {
+    const response = await apiRequest(API_CONFIG.endpoints.auth.login, {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+      skipAuth: true,
+    });
+    return response;
+  } catch (error: any) {
+    console.error('Erro no login:', error);
+    throw error;
+  }
+};
+
+// Função para iniciar cadastro
+export const iniciarCadastro = async (userData: any) => {
+  try {
+    const response = await apiRequest(API_CONFIG.endpoints.auth.cadastro, {
+      method: 'POST',
+      body: JSON.stringify(userData),
+      skipAuth: true,
+    });
+    return response;
+  } catch (error: any) {
+    console.error('Erro ao iniciar cadastro:', error);
+    throw error;
+  }
+};
+
+// Função para verificar código
+export const verificarCodigo = async (data: any) => {
+  try {
+    const response = await apiRequest(API_CONFIG.endpoints.auth.verificarCodigo, {
+      method: 'POST',
+      body: JSON.stringify(data),
+      skipAuth: true,
+    });
+    return response;
+  } catch (error: any) {
+    console.error('Erro ao verificar código:', error);
+    throw error;
+  }
+};
+
+// Função para callback do Google OAuth
+export const googleCallback = async (data: any) => {
+  try {
+    const response = await apiRequest(API_CONFIG.endpoints.auth.googleCallback, {
+      method: 'POST',
+      body: JSON.stringify(data),
+      skipAuth: true,
+    });
+    return response;
+  } catch (error: any) {
+    console.error('Erro no callback do Google:', error);
+    throw error;
+  }
+};
+
+// Função para obter configuração do Google OAuth
+export const getGoogleConfig = async () => {
+  try {
+    const response = await apiRequest(API_CONFIG.endpoints.auth.googleConfig, {
+      method: 'GET',
+      skipAuth: true,
+    });
+    return response;
+  } catch (error: any) {
+    console.error('Erro ao obter configuração do Google:', error);
+    throw error;
+  }
+};
+
+// Função para atualizar telefone
+export const atualizarTelefone = async (telefoneData: any) => {
+  try {
+    const response = await apiRequest(API_CONFIG.endpoints.auth.atualizarTelefone, {
+      method: 'PUT',
+      body: JSON.stringify(telefoneData),
+    });
+    return response;
+  } catch (error: any) {
+    console.error('Erro ao atualizar telefone:', error);
+    throw error;
+  }
+};
+
+// Função para criar agendamento
+export const criarAgendamento = async (agendamentoData: any) => {
+  try {
+    const response = await apiRequest(API_CONFIG.endpoints.agendamentos.criar, {
+      method: 'POST',
+      body: JSON.stringify(agendamentoData),
+    });
+    return response;
+  } catch (error: any) {
+    console.error('Erro ao criar agendamento:', error);
+    throw error;
+  }
+};
+
+// Função para listar agendamentos
+export const listarAgendamentos = async () => {
+  try {
+    const response = await apiRequest(API_CONFIG.endpoints.agendamentos.listar, {
+      method: 'GET',
+      skipAuth: true, // Rota pública conforme seu backend
+    });
+    // Backend retorna { success: true, data: [...] }
+    return response.data || response;
+  } catch (error: any) {
+    console.error('Erro ao listar agendamentos:', error);
+    throw error;
+  }
+};
+
+// Função para atualizar agendamento
+export const atualizarAgendamento = async (id: string, agendamentoData: any) => {
+  try {
+    const response = await apiRequest(API_CONFIG.endpoints.agendamentos.atualizar(id), {
+      method: 'PUT',
+      body: JSON.stringify(agendamentoData),
+    });
+    // Backend retorna { success: true, agendamento: {...} }
+    return response.agendamento || response;
+  } catch (error: any) {
+    console.error('Erro ao atualizar agendamento:', error);
+    throw error;
+  }
+};
+
+// Função para deletar agendamento
+export const deletarAgendamento = async (id: string) => {
+  try {
+    const response = await apiRequest(API_CONFIG.endpoints.agendamentos.remover(id), {
+      method: 'DELETE',
+    });
+    // Backend retorna { success: true, message: "Agendamento excluído" }
+    return response;
+  } catch (error: any) {
+    console.error('Erro ao deletar agendamento:', error);
+    throw error;
+  }
+};
+
+// Função para listar usuários
+export const listarUsuarios = async () => {
+  try {
+    const response = await apiRequest(API_CONFIG.endpoints.usuarios.listar, {
+      method: 'GET',
+    });
+    return response;
+  } catch (error: any) {
+    console.error('Erro ao listar usuários:', error);
+    throw error;
+  }
+};
+
+// Função para criar usuário
+export const criarUsuario = async (userData: any) => {
+  try {
+    const response = await apiRequest(API_CONFIG.endpoints.usuarios.criar, {
+      method: 'POST',
+      body: JSON.stringify(userData),
+    });
+    return response;
+  } catch (error: any) {
+    console.error('Erro ao criar usuário:', error);
+    throw error;
+  }
+};
+
+// Função para criar admin
+export const criarAdmin = async (adminData: any) => {
+  try {
+    const response = await apiRequest(API_CONFIG.endpoints.admin.criarAdmin, {
+      method: 'POST',
+      body: JSON.stringify(adminData),
+    });
+    return response;
+  } catch (error: any) {
+    console.error('Erro ao criar admin:', error);
     throw error;
   }
 };
