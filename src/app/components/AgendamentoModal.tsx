@@ -1,15 +1,92 @@
+// ==========================================
+// MODAL DE AGENDAMENTO
+// ==========================================
+// Arquivo: src/app/components/AgendamentoModal.tsx
+// Versão: 2.0
+// Última atualização: 2024-01-15
+// Autor: Barber Lopes Club Dev Team
+// Descrição: Modal para criação e gestão de agendamentos
+// ==========================================
+
+/**
+ * AGENDAMENTO MODAL - BARBER LOPES CLUB
+ * =====================================
+ * 
+ * Componente modal responsável pela criação de novos agendamentos,
+ * incluindo seleção de serviços, datas, horários disponíveis e
+ * validações completas do processo de agendamento.
+ * 
+ * FUNCIONALIDADES PRINCIPAIS:
+ * ===========================
+ * - Formulário completo de agendamento
+ * - Validação de disponibilidade de horários
+ * - Integração com sistema de autenticação
+ * - Preenchimento automático de dados do usuário
+ * - Cálculo de preços por serviço
+ * - Validação de regras de negócio
+ * - Feedback visual para usuário
+ * - Integração com WhatsApp
+ * 
+ * REGRAS DE NEGÓCIO APLICADAS:
+ * ============================
+ * - Horário comercial: 9h às 20h
+ * - Intervalos de 1 hora entre agendamentos
+ * - Não permite agendamento em horários passados
+ * - Máximo 7 dias de antecedência
+ * - Usuário deve estar logado e verificado
+ * - Telefone é obrigatório para contato
+ * 
+ * VALIDAÇÕES IMPLEMENTADAS:
+ * ========================
+ * - Campos obrigatórios preenchidos
+ * - Formato de telefone brasileiro
+ * - Data não pode ser passada
+ * - Horário dentro do funcionamento
+ * - Disponibilidade do slot selecionado
+ * - Usuário autenticado
+ * 
+ * FLUXO DE USO:
+ * =============
+ * 1. Verifica se usuário está logado
+ * 2. Preenche dados automaticamente se logado
+ * 3. Usuário seleciona serviço, data e horário
+ * 4. Valida disponibilidade do horário
+ * 5. Confirma agendamento
+ * 6. Envia confirmação via WhatsApp
+ * 7. Fecha modal e atualiza estado
+ * 
+ * MANUTENÇÃO:
+ * ===========
+ * - Atualizar horários conforme mudanças operacionais
+ * - Validar compatibilidade com API de agendamentos
+ * - Testar responsividade em diferentes dispositivos
+ * - Monitorar performance com muitos slots de horário
+ */
+
 "use client";
 import { useState, useEffect, useMemo } from "react";
-import { apiRequest, API_CONFIG } from "@/app/utils/api";
+import { AgendamentoService, UtilsService, AuthService } from "@/services";
+import { apiRequest } from "@/app/utils/api";
 import { User } from "@/app/types";
 
+/**
+ * PROPS DO COMPONENTE AGENDAMENTO MODAL
+ * =====================================
+ */
 interface AgendamentoModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onLoginRequired: () => void;
+  isOpen: boolean;                      // Controla visibilidade do modal
+  onClose: () => void;                 // Callback para fechar modal
+  onLoginRequired: () => void;         // Callback quando login é necessário
 }
 
+/**
+ * COMPONENTE PRINCIPAL DO MODAL
+ * =============================
+ */
 export default function AgendamentoModal({ isOpen, onClose, onLoginRequired }: AgendamentoModalProps) {
+  // ==========================================
+  // ESTADO DO FORMULÁRIO
+  // ==========================================
   const [formData, setFormData] = useState({
     nome: '',
     telefone: '',
@@ -17,12 +94,19 @@ export default function AgendamentoModal({ isOpen, onClose, onLoginRequired }: A
     data: '',
     horario: ''
   });
+  
+  // ==========================================
+  // ESTADO DE AUTENTICAÇÃO E UI
+  // ==========================================
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // ==========================================
+  // EFEITO PARA CARREGAR DADOS DO USUÁRIO
+  // ==========================================
   useEffect(() => {
     if (isOpen) {
-      // Verificar se o usuário está logado
+      // Verificar se o usuário está logado e preencher dados automaticamente
       const userData = localStorage.getItem('user');
       if (userData) {
         const parsedUser = JSON.parse(userData);
@@ -36,6 +120,9 @@ export default function AgendamentoModal({ isOpen, onClose, onLoginRequired }: A
     }
   }, [isOpen]);
 
+  // ==========================================
+  // CONFIGURAÇÃO DE SERVIÇOS DISPONÍVEIS
+  // ==========================================
   const servicos = [
     { id: 'corte', nome: 'Corte', preco: 'R$ 35,00' },
     { id: 'barba', nome: 'Barba', preco: 'R$ 25,00' },
@@ -44,7 +131,15 @@ export default function AgendamentoModal({ isOpen, onClose, onLoginRequired }: A
     { id: 'pezinho', nome: 'Pezinho', preco: 'R$ 10,00' }
   ];
 
-  // Gera slots de horário (step em minutos)
+  /**
+   * GERADOR DE SLOTS DE HORÁRIO
+   * ===========================
+   * 
+   * Cria lista de horários disponíveis baseado em:
+   * - Horário de abertura e fechamento
+   * - Intervalo entre agendamentos
+   * - Regras de funcionamento
+   */
   const generateSlots = (start = "09:00", end = "20:00", stepMin = 60) => {
     const [sh, sm] = start.split(":").map(Number);
     const [eh, em] = end.split(":").map(Number);
@@ -135,10 +230,8 @@ export default function AgendamentoModal({ isOpen, onClose, onLoginRequired }: A
           horario: formData.horario,
           usuario_id: user.id
         };
-        await apiRequest(API_CONFIG.endpoints.agendamentos.criar, {
-          method: 'POST',
-          body: JSON.stringify(agendamentoData)
-        });
+        
+        await AgendamentoService.criar(agendamentoData);
       } catch (apiError) {
         // Se for erro de autenticação, redirecionar para login
         if (apiError instanceof Error && (apiError.message.includes('401') || apiError.message.includes('não autenticado'))) {
@@ -166,8 +259,7 @@ export default function AgendamentoModal({ isOpen, onClose, onLoginRequired }: A
 Agendamento solicitado via site!`;
 
       // Redirecionar para WhatsApp
-      const whatsappUrl = `https://wa.me/5511999999999?text=${encodeURIComponent(mensagem)}`;
-      window.open(whatsappUrl, '_blank');
+      UtilsService.abrirWhatsAppComMensagem(mensagem);
       
       alert('Agendamento processado! Você será redirecionado para o WhatsApp para confirmar.');
       onClose();

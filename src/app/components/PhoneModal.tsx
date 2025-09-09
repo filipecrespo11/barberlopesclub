@@ -1,6 +1,73 @@
+// ==========================================
+// MODAL DE ATUALIZAÇÃO DE TELEFONE
+// ==========================================
+// Arquivo: src/app/components/PhoneModal.tsx
+// Versão: 1.0
+// Última atualização: 2025-09-09
+// Autor: Barber Lopes Club Dev Team
+// Descrição: Modal para coleta e atualização do número de telefone do usuário
+// ==========================================
+
+/**
+ * PHONE MODAL - BARBER LOPES CLUB
+ * ===============================
+ * 
+ * Modal específico para coleta e atualização do número de telefone
+ * do usuário. Utilizado quando o telefone é obrigatório para 
+ * funcionalidades específicas como agendamentos ou comunicação
+ * via WhatsApp.
+ * 
+ * FUNCIONALIDADES PRINCIPAIS:
+ * ===========================
+ * - Formulário simples e focado para telefone
+ * - Validação em tempo real do formato telefônico
+ * - Integração com UtilsService para validação
+ * - Feedback visual de carregamento e erros
+ * - Atualização automática no perfil do usuário
+ * - Callback de sucesso para componente pai
+ * - Design responsivo e acessível
+ * 
+ * CASOS DE USO:
+ * =============
+ * - Usuário logou via Google sem telefone
+ * - Telefone inválido ou desatualizado
+ * - Primeira configuração do perfil
+ * - Atualização por solicitação do usuário
+ * - Habilitação de funcionalidades WhatsApp
+ * 
+ * VALIDAÇÃO DE TELEFONE:
+ * =====================
+ * - Formato brasileiro: (XX) XXXXX-XXXX
+ * - Remoção automática de caracteres especiais
+ * - Validação de comprimento mínimo
+ * - Verificação de códigos de área válidos
+ * - Feedback imediato de formato incorreto
+ * 
+ * FLUXO DE ATUALIZAÇÃO:
+ * ====================
+ * 1. Modal é aberto quando telefone necessário
+ * 2. Usuário digita número com validação em tempo real
+ * 3. Validação completa antes do envio
+ * 4. Requisição para API de atualização
+ * 5. Atualização do perfil local
+ * 6. Callback de sucesso executado
+ * 7. Modal fechado automaticamente
+ * 
+ * MANUTENÇÃO:
+ * ===========
+ * - Para alterar validação: modificar UtilsService.validarTelefone
+ * - Para alterar formato: ajustar placeholder e máscara
+ * - Para adicionar campos: estender formData state
+ * - Para alterar API: modificar AuthService.atualizarTelefone
+ * 
+ * @author Sistema de Perfil - Lopes Club
+ * @version 1.0
+ * @lastModified 2025-09-09
+ */
+
 "use client";
 import { useState } from "react";
-import { apiRequest } from "@/app/utils/api";
+import { AuthService, UtilsService } from "@/services";
 
 interface PhoneModalProps {
   isOpen: boolean;
@@ -23,19 +90,17 @@ export default function PhoneModal({ isOpen, onClose, onSuccess }: PhoneModalPro
     setLoading(true);
     setError("");
 
+    // Validar telefone primeiro
+    if (!UtilsService.validarTelefone(telefone)) {
+      setError("Formato de telefone inválido");
+      return;
+    }
+
     try {
       const user = JSON.parse(localStorage.getItem('user') || '{}');
-      const token = localStorage.getItem('token');
 
-      // Atualizar telefone no backend
-      const response = await apiRequest('/auterota/atualizar-telefone', {
-        method: 'PUT',
-        body: JSON.stringify({ telefone }),
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      // Atualizar telefone no backend usando o serviço
+      const response = await AuthService.atualizarTelefone(telefone);
 
       if (response.success) {
         // Atualizar dados locais
@@ -52,18 +117,8 @@ export default function PhoneModal({ isOpen, onClose, onSuccess }: PhoneModalPro
     }
   };
 
-  const formatPhone = (value: string) => {
-    // Remove tudo que não é número
-    const numbers = value.replace(/\D/g, '');
-    
-    // Aplica máscara (22) 99999-9999
-    if (numbers.length <= 2) return numbers;
-    if (numbers.length <= 7) return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
-    return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`;
-  };
-
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatPhone(e.target.value);
+    const formatted = UtilsService.formatarTelefone(e.target.value);
     setTelefone(formatted);
     setError("");
   };

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Hamburger Menu</title>
+    <style>
+        .hamburger {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: #333;
+            color: white;
+            border: none;
+            padding: 15px;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 1000;
+        }
+        .menu {
+            position: fixed;
+            top: 0;
+            left: -300px;
+            width: 300px;
+            height: 100vh;
+            background: #222;
+            color: white;
+            transition: left 0.3s ease;
+            z-index: 999;
+            padding: 60px 20px 20px;
+        }
+        .menu.open {
+            left: 0;
+        }
+        .menu-item {
+            display: block;
+            color: white;
+            text-decoration: none;
+            padding: 10px 0;
+            border-bottom: 1px solid #444;
+        }
+        .test-btn {
+            margin: 20px;
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Teste de Funcionamento dos Botões</h1>
+    
+    <button class="hamburger" onclick="toggleMenu()">☰</button>
+    
+    <div class="menu" id="menu">
+        <a href="#" class="menu-item" onclick="closeMenu()">Início</a>
+        <a href="#" class="menu-item" onclick="closeMenu()">Serviços</a>
+        <a href="#" class="menu-item" onclick="closeMenu()">Contato</a>
+    </div>
+    
+    <button class="test-btn" onclick="testAlert()">Teste Alert</button>
+    <button class="test-btn" onclick="testWhatsApp()">Teste WhatsApp</button>
+    
+    <script>
+        function toggleMenu() {
+            console.log('Hamburger clicked!');
+            const menu = document.getElementById('menu');
+            menu.classList.toggle('open');
+        }
+        
+        function closeMenu() {
+            console.log('Menu item clicked!');
+            const menu = document.getElementById('menu');
+            menu.classList.remove('open');
+        }
+        
+        function testAlert() {
+            console.log('Test button clicked!');
+            alert('Botão funcionando!');
+        }
+        
+        function testWhatsApp() {
+            console.log('WhatsApp button clicked!');
+            window.open('https://wa.me/5518997676767?text=Ol%C3%A1!%20Gostaria%20de%20agendar%20um%20corte.', '_blank');
+        }
+        
+        console.log('JavaScript carregado!');
+    </script>
+</body>
+</html>

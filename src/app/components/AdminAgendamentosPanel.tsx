@@ -1,6 +1,68 @@
+// ==========================================
+// PAINEL ADMINISTRATIVO DE AGENDAMENTOS
+// ==========================================
+// Arquivo: src/app/components/AdminAgendamentosPanel.tsx
+// Versão: 2.0
+// Última atualização: 2025-09-09
+// Autor: Barber Lopes Club Dev Team
+// Descrição: Painel completo para gestão de agendamentos pelos administradores
+// ==========================================
+
+/**
+ * PAINEL ADMIN DE AGENDAMENTOS - BARBER LOPES CLUB
+ * ================================================
+ * 
+ * Componente responsável pela gestão completa de agendamentos
+ * no painel administrativo. Permite visualizar, filtrar, editar,
+ * cancelar e monitorar todos os agendamentos do sistema.
+ * 
+ * FUNCIONALIDADES PRINCIPAIS:
+ * ===========================
+ * - Listagem paginada de todos os agendamentos
+ * - Sistema de busca e filtros avançados
+ * - Filtro por período de datas
+ * - Atualização de status de agendamentos
+ * - Cancelamento de agendamentos com motivos
+ * - Interface responsiva com tabela adaptativa
+ * - Validação de permissões de acesso admin
+ * - Feedback visual para todas as ações
+ * 
+ * FILTROS DISPONÍVEIS:
+ * ===================
+ * - Busca por nome do cliente ou serviço
+ * - Filtro por data de início e fim
+ * - Paginação com controle de itens por página
+ * - Ordenação por data e status
+ * 
+ * AÇÕES ADMINISTRATIVAS:
+ * =====================
+ * - Visualização detalhada de agendamentos
+ * - Alteração de status (confirmado, cancelado, concluído)
+ * - Cancelamento com registro de motivo
+ * - Exportação de dados (futuro)
+ * 
+ * SEGURANÇA:
+ * ==========
+ * - Verificação de permissões admin
+ * - Validação de tokens de autenticação
+ * - Controle de acesso por rotas protegidas
+ * - Logs de auditoria para ações críticas
+ * 
+ * MANUTENÇÃO:
+ * ===========
+ * - Para alterar filtros: modificar seções de search e date filters
+ * - Para alterar paginação: ajustar pageSize e controles de navegação
+ * - Para adicionar ações: estender botões de ação na tabela
+ * - Para modificar layout responsivo: ajustar classes Tailwind da tabela
+ * 
+ * @author Sistema de Gestão - Lopes Club
+ * @version 2.0
+ * @lastModified 2025-09-09
+ */
+
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { apiRequest, API_CONFIG } from "@/app/utils/api";
+import { AgendamentoService, UtilsService } from "@/services";
 import type { AgendamentoData } from "@/app/types/index";
 import { useRouter } from "next/navigation";
 
@@ -36,17 +98,17 @@ export default function AdminAgendamentosPanel() {
     }
 
     // Buscar agendamentos
-    apiRequest(API_CONFIG.endpoints.agendamentos.listar, { method: "GET" })
+    AgendamentoService.listar()
       .then((res) => {
-        if (res.success && res.data) {
-          const list = (res.data as any[]).map((a: any) => ({
+        if (res) {
+          const list = (res as any[]).map((a: any) => ({
             ...a,
             id: a?.id ?? a?._id ?? a?.agendamento_id ?? a?.id_agendamento ?? a?.codigo,
             horario: a?.horario ?? a?.hora,
           })) as AgendamentoData[];
           setAgendamentos(list);
         } else {
-          setError(res.message || "Erro ao buscar agendamentos.");
+          setError("Erro ao buscar agendamentos.");
         }
       })
       .catch((err) => {
@@ -73,15 +135,15 @@ export default function AdminAgendamentosPanel() {
     setLoading(true);
     setError("");
     try {
-      const res = await apiRequest(API_CONFIG.endpoints.agendamentos.listar, { method: 'GET' });
-      if (res.success && res.data) {
-        const list = (res.data as any[]).map((a: any) => ({
+      const res = await AgendamentoService.listar();
+      if (res) {
+        const list = (res as any[]).map((a: any) => ({
           ...a,
           id: a?.id ?? a?._id ?? a?.agendamento_id ?? a?.id_agendamento ?? a?.codigo,
           horario: a?.horario ?? a?.hora,
         })) as AgendamentoData[];
         setAgendamentos(list);
-      } else setError(res.message || 'Erro ao buscar agendamentos.');
+      } else setError('Erro ao buscar agendamentos.');
     } catch (e: any) {
       setError(e?.message || 'Erro ao buscar agendamentos.');
     } finally {
@@ -149,7 +211,7 @@ export default function AdminAgendamentosPanel() {
     if (!id) return alert('Não é possível excluir: registro sem ID.');
     if (!confirm(`Excluir agendamento de ${item.nome} em ${item.data} às ${item.horario || item.hora}?`)) return;
     try {
-      const resp = await apiRequest(API_CONFIG.endpoints.agendamentos.remover(id), { method: 'DELETE' });
+      const resp = await AgendamentoService.remover(id);
       if ((resp as any)?.success === false) return alert(resp?.message || 'Erro ao excluir');
       await refresh();
       alert('Agendamento excluído.');
@@ -230,22 +292,16 @@ export default function AdminAgendamentosPanel() {
     }
     if (item.id) {
       try {
-        const resp = await apiRequest(API_CONFIG.endpoints.agendamentos.atualizar(item.id), {
-          method: 'PUT',
-          body: JSON.stringify(payload),
-        });
-        if ((resp as any)?.success === false) return alert(resp?.message || 'Erro ao atualizar');
+        const resp = await AgendamentoService.atualizar(item.id, payload);
+        if ((resp as any)?.success === false) return alert((resp as any)?.message || 'Erro ao atualizar');
       } catch (e: any) {
         if (e?.status === 409) return alert(e?.message || 'Horário já ocupado. Escolha outro.');
         return alert(e?.message || 'Erro ao atualizar');
       }
     } else {
       try {
-        const resp = await apiRequest(API_CONFIG.endpoints.agendamentos.criar, {
-          method: 'POST',
-          body: JSON.stringify(payload),
-        });
-        if ((resp as any)?.success === false) return alert(resp?.message || 'Erro ao criar');
+        const resp = await AgendamentoService.criar(payload);
+        if ((resp as any)?.success === false) return alert((resp as any)?.message || 'Erro ao criar');
       } catch (e: any) {
         if (e?.status === 409) return alert(e?.message || 'Horário já ocupado. Escolha outro.');
         return alert(e?.message || 'Erro ao criar');

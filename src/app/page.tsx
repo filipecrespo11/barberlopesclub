@@ -1,3 +1,56 @@
+// ==========================================
+// PÁGINA INICIAL DA APLICAÇÃO
+// ==========================================
+// Arquivo: src/app/page.tsx
+// Versão: 2.0
+// Última atualização: 2024-01-15
+// Autor: Barber Lopes Club Dev Team
+// Descrição: Landing page principal com seções de apresentação e agendamento
+// ==========================================
+
+/**
+ * HOME PAGE - BARBER LOPES CLUB
+ * =============================
+ * 
+ * Página inicial da aplicação contendo:
+ * - Hero section com call-to-action principal
+ * - Seções de serviços oferecidos
+ * - Galeria de trabalhos realizados
+ * - Informações sobre a barbearia
+ * - Sistema de modais para agendamento e autenticação
+ * 
+ * FUNCIONALIDADES PRINCIPAIS:
+ * ===========================
+ * - Sistema de agendamento integrado
+ * - Autenticação via email/senha ou Google OAuth
+ * - Painel administrativo para usuários admin
+ * - Responsividade completa
+ * - Integração com WhatsApp
+ * 
+ * MODAIS DISPONÍVEIS:
+ * ==================
+ * - AgendamentoModal: Criação de novos agendamentos
+ * - LoginModal: Autenticação de usuários
+ * - CadastroModal: Registro de novos usuários
+ * - PhoneModal: Coleta de telefone (pós Google OAuth)
+ * 
+ * FLUXO DE AUTENTICAÇÃO:
+ * =====================
+ * 1. Usuário clica em "Agendar"
+ * 2. Se não logado, abre modal de login
+ * 3. Após login/cadastro, abre modal de agendamento
+ * 4. Se login via Google e sem telefone, solicita telefone
+ * 5. Admin logado vê botão para painel administrativo
+ * 
+ * MANUTENÇÃO:
+ * ===========
+ * - Monitorar performance das imagens (otimização Next.js)
+ * - Manter compatibilidade com APIs do Google OAuth
+ * - Verificar responsividade em diferentes dispositivos
+ * - Atualizar textos e imagens conforme necessidade
+ * - Testar fluxos de autenticação regularmente
+ */
+
 "use client";
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
@@ -9,6 +62,13 @@ import PhoneModal from "./components/PhoneModal";
 
 import type { User } from "./types";
 
+/**
+ * COMPONENTE PRINCIPAL DA HOME PAGE
+ * =================================
+ * 
+ * Gerencia estado dos modais e coordena a interação entre
+ * diferentes funcionalidades da aplicação.
+ */
 function HomeContent() {
   const searchParams = useSearchParams();
   const [isAgendamentoModalOpen, setIsAgendamentoModalOpen] = useState(false);

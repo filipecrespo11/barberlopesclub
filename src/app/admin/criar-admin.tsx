@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { apiRequest, API_CONFIG } from "@/app/utils/api";
+import { AuthService } from "@/services";
 import bcrypt from "bcryptjs";
 
 export default function CriarAdminPage() {
@@ -54,9 +54,14 @@ export default function CriarAdminPage() {
         tel: form.tel,
         password: hashed,
       };
-      const token = rawToken;
-      const res = await apiRequest('/api/admins', { method: 'POST', body: JSON.stringify(payload), skipAuth: true, headers: token ? { Authorization: `Bearer ${token}`, 'x-access-token': token } : undefined });
-      const ok = res?.success === true || !!res?.usuario || !!res?.user || !!res?.id || !!res?._id || !!res?.admin;
+      const res = await AuthService.criarAdmin({
+        nome_completo: form.nome,
+        username: form.email,
+        email: form.email,
+        tel: form.tel,
+        password: hashed,
+      });
+      const ok = res?.success === true || !!(res as any)?.usuario || !!(res as any)?.user || !!(res as any)?.id || !!(res as any)?._id || !!(res as any)?.admin;
       if (ok) {
         setSuccess("Administrador criado com sucesso!");
         setForm({ nome: "", email: "", password: "", tel: "" });

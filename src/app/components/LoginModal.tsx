@@ -1,6 +1,72 @@
+// ==========================================
+// MODAL DE LOGIN E AUTENTICAÇÃO
+// ==========================================
+// Arquivo: src/app/components/LoginModal.tsx
+// Versão: 2.0
+// Última atualização: 2025-09-09
+// Autor: Barber Lopes Club Dev Team
+// Descrição: Modal responsivo para login com email/senha e OAuth Google
+// ==========================================
+
+/**
+ * LOGIN MODAL - BARBER LOPES CLUB
+ * ===============================
+ * 
+ * Componente modal para autenticação de usuários com suporte
+ * a login tradicional (email/senha) e autenticação social via
+ * Google OAuth 2.0.
+ * 
+ * FUNCIONALIDADES PRINCIPAIS:
+ * ===========================
+ * - Login com email e senha
+ * - Autenticação Google OAuth em popup
+ * - Validação de formulários em tempo real
+ * - Feedback visual de carregamento e erros
+ * - Gerenciamento automático de estado
+ * - Limpeza de dados ao fechar modal
+ * - Integração com sistema de tokens
+ * - Redirecionamento baseado em permissões
+ * 
+ * FLUXO DE AUTENTICAÇÃO:
+ * =====================
+ * 1. Usuário insere credenciais ou clica no Google
+ * 2. Validação dos dados no frontend
+ * 3. Envio para API de autenticação
+ * 4. Recebimento e armazenamento de tokens
+ * 5. Atualização do estado global do usuário
+ * 6. Callback de sucesso para componente pai
+ * 7. Fechamento automático do modal
+ * 
+ * OAUTH GOOGLE:
+ * =============
+ * - Abertura de popup para autenticação Google
+ * - Troca de código por tokens no backend
+ * - Criação automática de conta se necessário
+ * - Preenchimento automático de dados do perfil
+ * 
+ * SEGURANÇA:
+ * ==========
+ * - Validação de entrada no frontend e backend
+ * - Tokens JWT com expiração automática
+ * - HTTPS obrigatório em produção
+ * - Sanitização de dados de entrada
+ * - Controle de origem do popup OAuth
+ * 
+ * MANUTENÇÃO:
+ * ===========
+ * - Para alterar validações: modificar handleSubmit
+ * - Para alterar Google OAuth: configurar openPopup e listeners
+ * - Para alterar UI: modificar classes Tailwind e estrutura JSX
+ * - Para debug: habilitar logs no AuthService
+ * 
+ * @author Sistema de Autenticação - Lopes Club
+ * @version 2.0
+ * @lastModified 2025-09-09
+ */
+
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import { apiRequest, API_CONFIG } from "@/app/utils/api";
+import { AuthService } from "@/services";
 import { User } from "@/app/types";
 import { openPopup } from "@/app/utils/popup";
 
@@ -72,9 +138,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToCadastro, onLogi
     setErro(''); // Limpar erros anteriores
     try {
       // Buscar configurações do Google OAuth do backend
-      const googleConfig = await apiRequest(API_CONFIG.endpoints.auth.googleConfig, {
-        method: 'GET',
-      });
+      const googleConfig = await AuthService.getGoogleConfig();
       
       if (!googleConfig || !googleConfig.clientId) {
         setErro('Google OAuth não está configurado no servidor.');
@@ -104,33 +168,20 @@ export default function LoginModal({ isOpen, onClose, onSwitchToCadastro, onLogi
     setLoading(true);
     setErro("");
 
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🔐 Iniciando processo de login...');
-    }
-
-    try {      const loginData = {
+    try {      
+      const loginData = {
         username: formData.email,
         password: formData.password
       };
       
-      if (process.env.NODE_ENV === 'development') {
-        console.log('📤 Enviando dados de login...');
-      }
-      
-      const response = await apiRequest(API_CONFIG.endpoints.auth.login, {
-        method: 'POST',
-        body: JSON.stringify(loginData),
-      });
-
-      if (process.env.NODE_ENV === 'development') {
-        console.log('✅ Login realizado com sucesso');
-      }
+      const response = await AuthService.login(loginData);
 
       // Login realizado com sucesso
-      localStorage.setItem("user", JSON.stringify(response.usuario));
+      const user = { ...response.user, verificado: true } as User;
+      localStorage.setItem("user", JSON.stringify(user));
       localStorage.setItem("token", response.token);
       
-      onLoginSuccess(response.usuario);
+      onLoginSuccess(user);
       handleClose(); // Limpa o estado e fecha o modal
       
     } catch (error) {

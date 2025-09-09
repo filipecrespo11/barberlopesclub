@@ -1,6 +1,99 @@
+// ==========================================
+// MODAL DE CADASTRO DE USUÁRIO
+// ==========================================
+// Arquivo: src/app/components/CadastroModal.tsx
+// Versão: 2.0
+// Última atualização: 2025-09-09
+// Autor: Barber Lopes Club Dev Team
+// Descrição: Modal completo para cadastro de usuários com verificação por email
+// ==========================================
+
+/**
+ * CADASTRO MODAL - BARBER LOPES CLUB
+ * ==================================
+ * 
+ * Modal responsivo para cadastro de novos usuários com suporte
+ * a registro tradicional (formulário) e integração com Google OAuth.
+ * Inclui processo completo de verificação por email em duas etapas.
+ * 
+ * FUNCIONALIDADES PRINCIPAIS:
+ * ===========================
+ * - Formulário completo de cadastro
+ * - Integração Google OAuth em popup
+ * - Processo de verificação por email (2 etapas)
+ * - Validação em tempo real de campos
+ * - Preenchimento automático via Google
+ * - Gerenciamento inteligente de estado
+ * - Feedback visual para usuário
+ * - Auto-preenchimento em ambiente dev
+ * 
+ * FLUXO DE CADASTRO:
+ * ==================
+ * ETAPA 1 - FORMULÁRIO:
+ * - Preenchimento de dados pessoais
+ * - Validação de senha e confirmação
+ * - Opção de cadastro via Google OAuth
+ * - Envio dos dados para API
+ * 
+ * ETAPA 2 - VERIFICAÇÃO:
+ * - Recebimento de código por email
+ * - Interface para inserir código de verificação
+ * - Auto-preenchimento em desenvolvimento
+ * - Confirmação final do cadastro
+ * 
+ * OAUTH GOOGLE INTEGRADO:
+ * =======================
+ * - Popup para autenticação Google
+ * - Preenchimento automático de dados
+ * - Tratamento de erros de OAuth
+ * - Fallback para formulário manual
+ * - Comunicação segura via postMessage
+ * 
+ * VALIDAÇÕES IMPLEMENTADAS:
+ * =========================
+ * - Email: formato válido
+ * - Senha: mínimo 6 caracteres + confirmação
+ * - Telefone: formato brasileiro (opcional)
+ * - Nome: obrigatório, mínimo 3 caracteres
+ * - Código verificação: 6 dígitos
+ * 
+ * ESTADOS DO MODAL:
+ * =================
+ * - 'cadastro': Formulário inicial de dados
+ * - 'verificacao': Inserção do código de email
+ * - Loading states para operações assíncronas
+ * - Error states para feedback de erros
+ * 
+ * MODO DESENVOLVIMENTO:
+ * =====================
+ * - Auto-preenchimento de código de verificação
+ * - Logs detalhados de debugging
+ * - Configurações específicas de dev
+ * - Bypass de algumas validações
+ * 
+ * SEGURANÇA:
+ * ==========
+ * - Sanitização de dados de entrada
+ * - Validação dupla (frontend + backend)
+ * - Tokens seguros para comunicação
+ * - Verificação de origem OAuth
+ * - Rate limiting no envio de códigos
+ * 
+ * MANUTENÇÃO:
+ * ===========
+ * - Para alterar validações: modificar handleSubmit
+ * - Para OAuth: configurar openPopup e listeners
+ * - Para verificação: ajustar handleVerificarCodigo
+ * - Para UI: modificar componentes CadastroForm/VerificacaoForm
+ * 
+ * @author Sistema de Cadastro - Lopes Club
+ * @version 2.0
+ * @lastModified 2025-09-09
+ */
+
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { apiRequest, API_CONFIG } from "@/app/utils/api";
+import { AuthService } from "@/services";
 import { openPopup } from "@/app/utils/popup";
 
 interface CadastroModalProps {
@@ -83,9 +176,7 @@ export default function CadastroModal({ isOpen, onClose, onSwitchToLogin }: Cada
   };  const handleGoogleSignup = async () => {
     try {
       // Buscar configurações do Google OAuth do backend
-      const googleConfig = await apiRequest(API_CONFIG.endpoints.auth.googleConfig, {
-        method: 'GET',
-      });
+      const googleConfig = await AuthService.getGoogleConfig();
       
       if (!googleConfig || !googleConfig.clientId) {
         alert('Google OAuth não está configurado no servidor.');
@@ -127,27 +218,23 @@ export default function CadastroModal({ isOpen, onClose, onSwitchToLogin }: Cada
     }
 
     try {
-      const response = await apiRequest(API_CONFIG.endpoints.auth.cadastro, {
-        method: 'POST',
-        body: JSON.stringify({
-          nome_completo: formData.nome,
-          username: formData.email, // Usando email como username
-          password: formData.password,
-          tel: formData.telefone,
-          email: formData.email
-        }),
+      const response = await AuthService.iniciarCadastro({
+        nome_completo: formData.nome,
+        password: formData.password,
+        tel: formData.telefone,
+        email: formData.email
       });
 
       // Se retornar código de desenvolvimento, preencher automaticamente
-      if (response.codigo_dev) {
-        const codigo = response.codigo_dev;
+      if ((response as any).codigo_dev) {
+        const codigo = (response as any).codigo_dev;
         if (process.env.NODE_ENV === 'development') {
           console.log('🔐 Código de desenvolvimento detectado');
         }
         setCodigoVerificacao(codigo);
         
         // Mostrar mensagem específica para modo desenvolvimento
-        if (response.debug && process.env.NODE_ENV === 'development') {
+        if ((response as any).debug && process.env.NODE_ENV === 'development') {
           console.log('ℹ️ Modo desenvolvimento ativo');
         }
       }
@@ -177,13 +264,7 @@ export default function CadastroModal({ isOpen, onClose, onSwitchToLogin }: Cada
 
     try {
       // Chamar endpoint de verificação
-      const response = await apiRequest(API_CONFIG.endpoints.auth.verificarCodigo, {
-        method: 'POST',
-        body: JSON.stringify({
-          email: formData.email,
-          codigo: codigoVerificacao
-        }),
-      });
+      const response = await AuthService.verificarCodigo(formData.email, codigoVerificacao);
 
       if (response.success) {
         // Cadastro confirmado com sucesso

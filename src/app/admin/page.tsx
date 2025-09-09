@@ -1,6 +1,89 @@
+// ==========================================
+// PÁGINA PRINCIPAL DO PAINEL ADMINISTRATIVO
+// ==========================================
+// Arquivo: src/app/admin/page.tsx
+// Versão: 3.0
+// Última atualização: 2025-09-09
+// Autor: Barber Lopes Club Dev Team
+// Descrição: Dashboard administrativo com detecção inteligente de permissões
+// ==========================================
+
+/**
+ * PAINEL ADMINISTRATIVO PRINCIPAL - BARBER LOPES CLUB
+ * ===================================================
+ * 
+ * Página principal do sistema administrativo com detecção robusta
+ * de permissões admin e dashboard completo de gestão da barbearia.
+ * Inclui componentes para gerenciamento de agendamentos, usuários
+ * e configurações do sistema.
+ * 
+ * FUNCIONALIDADES PRINCIPAIS:
+ * ===========================
+ * - Autenticação e autorização admin robusta
+ * - Dashboard com métricas e estatísticas
+ * - Gestão completa de agendamentos
+ * - Interface para criação de novos administradores
+ * - Sistema de logs e auditoria
+ * - Configurações gerais do sistema
+ * - Exportação de relatórios
+ * 
+ * DETECÇÃO DE ADMIN INTELIGENTE:
+ * =============================
+ * O sistema utiliza múltiplas estratégias para detectar
+ * se um usuário possui permissões administrativas:
+ * 
+ * 1. Campos booleanos diretos (isAdmin, admin, etc.)
+ * 2. Strings com palavras-chave admin
+ * 3. Níveis numéricos de acesso (>= 1)
+ * 4. Arrays de roles/permissions
+ * 5. Objetos aninhados com informações de acesso
+ * 6. Detecção por padrões de nomenclatura
+ * 
+ * PALAVRAS-CHAVE RECONHECIDAS:
+ * ============================
+ * - admin, administrator, administrador, adm
+ * - gerente, manager, supervisor
+ * - super, root, owner, proprietário
+ * - E variações em campos como role, nivel, tipo, etc.
+ * 
+ * COMPONENTES INCLUÍDOS:
+ * =====================
+ * - AdminAgendamentosPanel: Gestão de agendamentos
+ * - UserManagement: Gerenciamento de usuários
+ * - SystemLogs: Logs e auditoria
+ * - Reports: Relatórios e estatísticas
+ * - Settings: Configurações do sistema
+ * 
+ * SEGURANÇA:
+ * ==========
+ * - Verificação de token JWT válido
+ * - Validação de permissões no backend
+ * - Redirecionamento automático para login
+ * - Logs de tentativas de acesso
+ * - Timeout automático de sessão
+ * 
+ * NAVEGAÇÃO:
+ * ==========
+ * - Menu lateral com seções organizadas
+ * - Breadcrumbs para orientação
+ * - Atalhos de teclado para ações comuns
+ * - Interface responsiva para mobile
+ * 
+ * MANUTENÇÃO:
+ * ===========
+ * - Para adicionar detecção de admin: estender hasAdminSignal
+ * - Para novos componentes: adicionar no dashboard layout
+ * - Para alterar segurança: modificar verificações de auth
+ * - Para logs: configurar auditoria nos AuthService
+ * 
+ * @author Sistema Administrativo - Lopes Club
+ * @version 3.0
+ * @lastModified 2025-09-09
+ */
+
 "use client";
 import { useState, useEffect } from "react";
-import { apiRequest } from "@/app/utils/api";
+import { AuthService } from "@/services";
 import { useRouter } from "next/navigation";
 
 function AdminLogin() {
@@ -72,12 +155,9 @@ function AdminLogin() {
     setLoading(true);
     setError("");
     try {
-      const res = await apiRequest("/auterota/login", {
-        method: "POST",
-        body: JSON.stringify({ email, password }),
-      });
-      const usuario = res.usuario || res.user || res.data?.usuario || res.data?.user;
-      const token = res.token || res.data?.token;
+      const res = await AuthService.login({ username: email, password });
+      const usuario = (res as any).usuario || res.user || (res as any).data?.usuario || (res as any).data?.user;
+      const token = res.token || (res as any).data?.token;
       const claims = decodeJwtClaims(token);
       const adminOk = isUserAdmin(usuario) || isClaimsAdmin(claims);
       if (process.env.NODE_ENV === 'development') {

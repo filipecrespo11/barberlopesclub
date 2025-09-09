@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test</title>
+</head>
+<body>
+    <button id="testBtn" onclick="alert('Botão funcionando!')">Teste Clique</button>
+    <div id="hamburger" onclick="toggleMenu()" style="cursor: pointer; padding: 10px; background: gray;">☰ Menu Hamburger</div>
+    <div id="menu" style="display: none; background: lightgray; padding: 10px;">
+        <p>Menu aberto!</p>
+    </div>
+    
+    <script>
+        function toggleMenu() {
+            const menu = document.getElementById('menu');
+            if (menu.style.display === 'none') {
+                menu.style.display = 'block';
+                console.log('Menu aberto');
+            } else {
+                menu.style.display = 'none';
+                console.log('Menu fechado');
+            }
+        }
+        
+        console.log('JavaScript carregado');
+    </script>
+</body>
+</html>

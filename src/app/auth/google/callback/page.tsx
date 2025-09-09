@@ -1,7 +1,99 @@
+// ==========================================
+// CALLBACK DO GOOGLE OAUTH 2.0
+// ==========================================
+// Arquivo: src/app/auth/google/callback/page.tsx
+// Versão: 2.0
+// Última atualização: 2025-09-09
+// Autor: Barber Lopes Club Dev Team
+// Descrição: Página de callback para autenticação Google OAuth
+// ==========================================
+
+/**
+ * GOOGLE OAUTH CALLBACK - BARBER LOPES CLUB
+ * =========================================
+ * 
+ * Página de callback responsável pelo processamento da resposta
+ * de autenticação do Google OAuth 2.0. Gerencia a troca de código
+ * por tokens, criação/login de usuários e comunicação com a
+ * janela pai via postMessage.
+ * 
+ * FUNCIONALIDADES PRINCIPAIS:
+ * ===========================
+ * - Processamento de códigos de autorização OAuth
+ * - Troca de código por access tokens
+ * - Criação automática de contas via Google
+ * - Login automático de usuários existentes
+ * - Comunicação segura via postMessage
+ * - Tratamento de erros de autenticação
+ * - Redirecionamento baseado no estado
+ * - Interface de feedback visual
+ * 
+ * FLUXO OAUTH COMPLETO:
+ * ====================
+ * 1. Usuário é redirecionado do Google para esta página
+ * 2. Extração do código de autorização da URL
+ * 3. Verificação de parâmetros de estado (state)
+ * 4. Envio do código para API backend
+ * 5. Backend troca código por tokens no Google
+ * 6. Criação/atualização de usuário no sistema
+ * 7. Retorno de dados de usuário e tokens
+ * 8. Comunicação com janela pai via postMessage
+ * 9. Fechamento automático do popup
+ * 
+ * PARÂMETROS DE URL PROCESSADOS:
+ * =============================
+ * - code: Código de autorização do Google
+ * - state: Estado para diferençar login/cadastro
+ * - error: Erro de autenticação (se houver)
+ * - error_description: Descrição detalhada do erro
+ * 
+ * COMUNICAÇÃO COM JANELA PAI:
+ * ===========================
+ * - Envio de dados via postMessage para window.opener
+ * - Verificação de origem para segurança
+ * - Diferentes tipos de mensagem (success, error)
+ * - Fechamento automático após comunicação
+ * 
+ * TRATAMENTO DE ESTADOS:
+ * =====================
+ * - state=login: Login de usuário existente
+ * - state=signup: Cadastro de novo usuário
+ * - Sem state: Comportamento padrão (login)
+ * 
+ * SEGURANÇA IMPLEMENTADA:
+ * ======================
+ * - Validação de origem das mensagens
+ * - Verificação de estado CSRF
+ * - Sanitização de parâmetros de URL
+ * - Tokens seguros para comunicação
+ * - HTTPS obrigatório em produção
+ * 
+ * TRATAMENTO DE ERROS:
+ * ===================
+ * - access_denied: Usuário negou permissões
+ * - invalid_request: Parâmetros OAuth inválidos
+ * - server_error: Erro interno do Google
+ * - temporarily_unavailable: Serviço indisponível
+ * - Erros de rede e conectividade
+ * - Tokens expirados ou inválidos
+ * 
+ * MANUTENÇÃO:
+ * ===========
+ * - Para alterar fluxo OAuth: modificar handleCallback
+ * - Para debug: habilitar logs no AuthService
+ * - Para novos provedores: estender lógica de processamento
+ * - Para customizar UI: ajustar componentes de feedback
+ * 
+ * @author Sistema de Autenticação OAuth - Lopes Club
+ * @version 2.0
+ * @lastModified 2025-09-09
+ */
+
 "use client";
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { apiRequest, API_CONFIG } from '@/app/utils/api';
+import { AuthService, APP_CONFIG } from '@/services';
+import { apiRequest } from '@/app/utils/api';
 
 function GoogleCallbackContent() {
   const router = useRouter();
@@ -49,12 +141,7 @@ function GoogleCallbackContent() {
         }
         let response: any;
         try {
-          response = await apiRequest(API_CONFIG.endpoints.auth.googleCallback, {
-            method: 'POST',
-            // Alguns backends esperam "redirect_uri" (snake_case)
-            body: JSON.stringify({ code, state, redirect_uri: redirectUri, redirectUri }),
-            skipAuth: true,
-          });
+          response = await AuthService.processGoogleCallback(code);
           // Log seguro - apenas status de sucesso
           if (process.env.NODE_ENV === 'development') {
             console.log('✅ Autenticação Google bem-sucedida');
@@ -70,7 +157,7 @@ function GoogleCallbackContent() {
             const qp = new URLSearchParams({ code: code!, state: state || '', redirect_uri: redirectUri }).toString();
             // 1) tenta GET no mesmo caminho
             try {
-              response = await apiRequest(`${API_CONFIG.endpoints.auth.googleCallback}?${qp}`, { method: 'GET', skipAuth: true });
+              response = await AuthService.processGoogleCallback(code!);
             } catch (e2: any) {
               // 2) tenta caminho alternativo sem '/auth'
               const altPath = '/auterota/google/callback';
